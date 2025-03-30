@@ -1,12 +1,12 @@
 <script setup lang="ts">
-// 在 defineProps 中直接定义类型
 const props = defineProps<{
   rows: number
   cols: number
 }>()
 
-// 处理 dragstart 事件
 const handleDragStart = (e: DragEvent) => {
+  console.log(e)
+
   e.dataTransfer?.setData('application/json', JSON.stringify(props))
 }
 </script>
@@ -14,7 +14,7 @@ const handleDragStart = (e: DragEvent) => {
 <template>
   <div
     class="p-1 rounded-xs border border-dashed border-transparent hover:border-white cursor-pointer"
-    draggable
+    draggable="true"
     @dragstart="handleDragStart"
   >
     <div

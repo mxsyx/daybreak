@@ -1,1 +1,1 @@
-export {default} from './SceneEditor.vue'
+export { default } from './SceneEditor.vue'
