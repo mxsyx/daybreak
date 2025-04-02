@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Clock, Grid3X3, Plus } from 'lucide-vue-next'
+import { Clock, Plus } from 'lucide-vue-next'
 import { useSceneStore } from '@/store'
-import { Switch } from '../ui/switch'
-import Toggle from '../ui/toggle/Toggle.vue'
-import { Tooltip } from '../ui/tooltip'
+import CanvasGrid from '../CanvasGrid'
 
 const sceneStore = useSceneStore()
 
@@ -30,10 +28,8 @@ if (!scene.value) {
       <div class="px-12 border border-dashed rounded-xs">
         <Plus />
       </div>
-
-      <Toggle>
-        <Grid3X3 />
-      </Toggle>
     </div>
+
+    <CanvasGrid />
   </div>
 </template>

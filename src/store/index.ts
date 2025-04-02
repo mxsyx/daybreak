@@ -1,3 +1,4 @@
-export { useSizeStore } from "./size";
-export { useSceneStore } from "./scene";
-export { useSelectedObjectStore } from "./selectedObject";
+export { default as useAppStore } from './app'
+export { default as useSizeStore } from './size'
+export { default as useSceneStore } from './scene'
+export { default as useSelectedObjectStore } from './selectedObject'

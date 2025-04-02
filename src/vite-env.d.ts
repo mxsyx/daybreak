@@ -50,3 +50,8 @@ interface Image {
 type SceneObject = Layout | Block | Image
 
 type Asset = Layout
+
+interface Vector {
+  x: number
+  y: number
+}
