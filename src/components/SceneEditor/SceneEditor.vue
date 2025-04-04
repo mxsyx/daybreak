@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { Clock, Plus } from 'lucide-vue-next'
 import { useSceneStore } from '@/store'
-import CanvasGrid from '../CanvasGrid'
+import CanvasGrid from '../Ruler'
 
 const sceneStore = useSceneStore()
 

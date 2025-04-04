@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { Toaster } from '@/components/ui/sonner'
 import Timeline from '@/components/Timeline'
 import SceneEditor from '@/components/SceneEditor'
 import AssetsExplorer from '@/components/AssetsExplorer'
 import ObjectEditor from './components/ObjectEditor'
-import { useAppStore } from './store'
+import pixi from './pixi'
 
-onMounted(async () => {
-  const appStore = useAppStore()
-  await appStore.init()
+const container = ref<HTMLDivElement>()
+onMounted(() => {
+  container.value!.appendChild(pixi.canvas)
 })
 </script>
 
@@ -21,7 +21,7 @@ onMounted(async () => {
     <div class="grid grid-cols-[3fr_4fr_3fr] gap-4">
       <AssetsExplorer />
       <div class="w-full grid grid-rows-[auto_1fr]">
-        <canvas id="canvas" class="w-full"></canvas>
+        <div ref="container"></div>
         <SceneEditor />
       </div>
       <ObjectEditor />
