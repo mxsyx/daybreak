@@ -1,31 +1,18 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import clsx from 'clsx'
-import { useSceneStore } from '@/store'
-
-const sceneStore = useSceneStore()
-
-const scene = computed(() => sceneStore.scene)
-
-if (!scene.value) {
-}
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
 </script>
 
 <template>
-  <div v-if="scene">
-    <!-- 网格显示 -->
-    <div class="mt-5">
-      <span
-        v-for="(grid, index) in scene.grids"
-        :key="index"
-        :class="
-          clsx(
-            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed'
-          )
-        "
-      >
-        {{ grid.text }}
-      </span>
+  <Tabs
+    default-value="account"
+    class="bg-[#13131b] rounded-xl border-[1px] overflow-auto"
+  >
+    <div class="p-4 sticky top-0 bg-[#13131b] w-full justify-start">
+      <TabsList>
+        <TabsTrigger value="objects">对象</TabsTrigger>
+        <TabsTrigger value="background">背景</TabsTrigger>
+        <TabsTrigger value="sounds"> 音效 </TabsTrigger>
+      </TabsList>
     </div>
-  </div>
+  </Tabs>
 </template>

@@ -42,10 +42,10 @@ const activeScene = ref<Scene>()
 // 初始化数据
 onMounted(async () => {
   if (import.meta.env.MODE === 'development') {
-    const { default: boxesData } = await import('@/test/boxes.json') as {
+    const { default: boxesData } = (await import('@/test/boxes.json')) as {
       default: (TextGrid | Scene)[]
     }
-    boxes.value = boxesData 
+    boxes.value = boxesData
     // @ts-ignore
     sceneStore.scene = boxesData[0] as Scene
     activeScene.value = boxesData[0] as Scene
@@ -73,7 +73,11 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
           blocks: [{ pl: 0, pt: 0, pr: 0, pb: 0 }],
         },
       }
-      boxes.value.splice(startGridIndex.value, index - startGridIndex.value + 1, newScene)
+      boxes.value.splice(
+        startGridIndex.value,
+        index - startGridIndex.value + 1,
+        newScene
+      )
       startGridIndex.value = undefined
     }
   } else {
@@ -85,18 +89,24 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 </script>
 
 <template>
-  <div class="w-full overflow-x-scroll my-4">
+  <div class="bg-[#1E1E29] border-[1px] p-3 rounded-xl overflow-x-scroll">
     <div class="text-white flex flex-nowrap">
       <span
         v-for="(box, index) in boxes"
         :key="index"
         :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
-        :class="clsx('inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed', {
-          'hover:bg-[#892fff]': box.type === 'grid',
-          'bg-[#892fff]': startGridIndex === index,
-          'mx-1 rounded-[4px] bg-[#13131b] border-solid': box.type === 'scene',
-          'border-[#892fff]': box === activeScene,
-        })"
+        :class="
+          clsx(
+            'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed',
+            {
+              'hover:bg-[#892fff]': box.type === 'grid',
+              'bg-[#892fff]': startGridIndex === index,
+              'mx-1 rounded-[4px] bg-[#13131b] border-solid':
+                box.type === 'scene',
+              'border-[#892fff]': box === activeScene,
+            }
+          )
+        "
         @click="handleClick(box, index)"
       >
         {{ box.text }}

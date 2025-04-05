@@ -2,7 +2,8 @@
 import { computed } from 'vue'
 import { Clock, Plus } from 'lucide-vue-next'
 import { useSceneStore } from '@/store'
-import CanvasGrid from '../Ruler'
+import Ruler from '../Ruler'
+import clsx from 'clsx'
 
 const sceneStore = useSceneStore()
 
@@ -13,23 +14,30 @@ if (!scene.value) {
 </script>
 
 <template>
-  <div v-if="scene">
-    <!-- 时间显示 -->
-    <div class="flex">
-      <Clock class="mr-2" />
-      <span>
-        {{ scene.grids[scene.grids.length - 1].end - scene.grids[0].start }} s
-      </span>
-    </div>
-
-    <!-- 背景设置 -->
-    <div class="flex mt-5">
-      <span class="mr-2">背景: </span>
-      <div class="px-12 border border-dashed rounded-xs">
-        <Plus />
+  <div v-if="scene" class="bg-[#1E1E29] border-[1px] p-4 rounded-xl">
+    <div class="flex gap-8">
+      <div class="center">
+        <Clock class="mr-2" :size="16" />
+        <span>
+          {{ scene.grids[scene.grids.length - 1].end - scene.grids[0].start }} s
+        </span>
       </div>
     </div>
 
-    <CanvasGrid />
+    <div v-if="scene">
+      <div>
+        <span
+          v-for="(grid, index) in scene.grids"
+          :key="index"
+          :class="
+            clsx(
+              'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed'
+            )
+          "
+        >
+          {{ grid.text }}
+        </span>
+      </div>
+    </div>
   </div>
 </template>
