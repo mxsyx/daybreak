@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', Roboto, system-ui, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -46,13 +47,13 @@ button {
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
-    --foreground-5: #696981;
+    --foreground-5: 240 10% 46%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 266 100% 59%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
@@ -74,12 +75,12 @@ button {
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
-    --foreground-5: #787890;
+    --foreground-5: 240 10 52%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
+    --primary: 266 100% 59%;
     --primary-foreground: 0 0% 9%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;

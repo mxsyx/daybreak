@@ -13,7 +13,7 @@ export default {
         background: 'hsl(var(--background))',
         foreground: {
           DEFAULT: 'hsl(var(--foreground))',
-          5: 'var(--foreground-5)',
+          5: 'hsl(var(--foreground-5))',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',

@@ -2,36 +2,36 @@
 
 class Storage {
   // @ts-ignore
-  #db: IDBDatabase;
+  #db: IDBDatabase
   #name: string
 
   constructor(name: string) {
-    this.#name = name;
-    const request = indexedDB.open('assets', 1);
+    this.#name = name
+    const request = indexedDB.open('assets', 1)
     request.onupgradeneeded = (event) => {
       // @ts-ignore
-      const db = event.target.result as IDBDatabase;
+      const db = event.target.result as IDBDatabase
       if (!db.objectStoreNames.contains(name)) {
-        db.createObjectStore(name);
+        db.createObjectStore(name)
       }
-    };
+    }
 
     request.onsuccess = (event) => {
       // @ts-ignore
-      this.#db = event.target.result;
-    };
-    
+      this.#db = event.target.result
+    }
+
     request.onerror = (event) => {
       // @ts-ignore
-      console.error('数据库打开失败', event.target.error);
-    };
+      console.error('数据库打开失败', event.target.error)
+    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   put(key: string, value: any) {
-    const transaction = this.#db.transaction(this.#name, 'readwrite');
-    const objectStore = transaction.objectStore(this.#name);
-    objectStore.put(value, key); 
+    const transaction = this.#db.transaction(this.#name, 'readwrite')
+    const objectStore = transaction.objectStore(this.#name)
+    objectStore.put(value, key)
   }
 }
 
@@ -46,4 +46,4 @@ export const storages = {
   layout: new Storage('layout'),
 }
 
-export default Storage;
+export default Storage
