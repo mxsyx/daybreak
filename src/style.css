@@ -4,7 +4,7 @@
 
 :root {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
-    'Microsoft YaHei', Roboto, system-ui, Arial, sans-serif;
+    'Microsoft YaHei', Roboto, 'Noto Sans CJK SC', system-ui, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -16,6 +16,13 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* fix: font `Noto Sans CJK SC` at Linux Chrome font-weight not working */
+@font-face {
+  font-family: 'Noto Sans CJK SC';
+  src: local('Noto Sans CJK SC'), format('truetype');
+  font-synthesis: weight;
 }
 
 body {
@@ -47,6 +54,7 @@ button {
   :root {
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
+    --foreground-1: 240 16% 16%;
     --foreground-5: 240 10% 46%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
@@ -71,10 +79,17 @@ button {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --surface-1: 0 0% 100%;
+    --surface-2: 0 0% 99.02%;
+    --surface-3: 240 20% 95.1%;
+    --alpha-5: 240 17.39% 9.02% / 5%;
+    --alpha-10: 240 17.39% 9.02% / 10%;
+    --stroke: 0 0% 100% / 5%;
   }
   .dark {
     --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
+    --foreground-1: 0 0% 100%;
     --foreground-5: 240 10 52%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
@@ -98,6 +113,12 @@ button {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --surface-1: 240 15.49% 13.92%;
+    --surface-2: 240 17% 9%;
+    --surface-3: 240 30.77% 5.1%;
+    --alpha-5: 0 0% 100% / 5%;
+    --alpha-10: 0 0% 100% / 10%;
+    --stroke: 0 0% 100% / 5%;
   }
 }
 

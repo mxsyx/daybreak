@@ -13,6 +13,7 @@ export default {
         background: 'hsl(var(--background))',
         foreground: {
           DEFAULT: 'hsl(var(--foreground))',
+          1: 'hsl(var(--foreground-1))',
           5: 'hsl(var(--foreground-5))',
         },
         card: {
@@ -53,6 +54,16 @@ export default {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+        surface: {
+          1: 'hsl(var(--surface-1))',
+          2: 'hsl(var(--surface-2))',
+          3: 'hsl(var(--surface-3))',
+        },
+        alpha: {
+          5: 'hsl(var(--alpha-5))',
+          10: 'hsl(var(--alpha-10))',
+        },
+        stroke: 'hsl(var(--stroke))',
       },
       keyframes: {
         'accordion-down': {

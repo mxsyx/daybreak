@@ -9,6 +9,7 @@ export async function initPixi() {
     height: 1080,
   })
   pixi.canvas.style.width = '100%'
+  pixi.canvas.style.borderRadius = '4px'
 
   if (import.meta.env.DEV) {
     initDevtools({ app: pixi })

@@ -1,1 +1,1 @@
-export { default } from "./Timeline.vue";
+export { default } from './Timeline.vue'

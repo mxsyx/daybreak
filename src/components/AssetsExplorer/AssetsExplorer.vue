@@ -3,12 +3,14 @@ import { Button } from '@/components/ui/button'
 import ImageExplorer from './ImageExplorer.vue'
 
 const BUTTON_CLASS =
-  'w-10 h-6 text-xs !bg-[#272836] text-white hover:opacity-90'
+  'w-10 h-6 text-xs bg-alpha-5 text-foreground-1 rounded shadow-none hover:bg-alpha-10'
 </script>
 
 <template>
-  <div class="bg-[#13131B] border-[1px] rounded-xl overflow-auto">
-    <div class="flex gap-2 p-4 border-b sticky top-0 bg-[#13131B]">
+  <aside
+    class="bg-surface-2 border-[1px] border-stroke rounded-xl overflow-auto"
+  >
+    <div class="flex gap-2 p-4 border-b sticky top-0 bg-surface-2">
       <Button :class="BUTTON_CLASS">背景</Button>
       <Button :class="BUTTON_CLASS">音乐</Button>
       <Button :class="BUTTON_CLASS">音效</Button>
@@ -20,5 +22,5 @@ const BUTTON_CLASS =
     <div class="px-4 py-2">
       <ImageExplorer />
     </div>
-  </div>
+  </aside>
 </template>
