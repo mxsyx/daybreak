@@ -53,9 +53,12 @@ button {
 @layer base {
   :root {
     --background: 0 0% 100%;
+    --background-inverted: 236 16.13% 18.24%;
     --foreground: 0 0% 3.9%;
     --foreground-1: 240 16% 16%;
+    --foreground-2: 240 14.09% 29.22%;
     --foreground-5: 240 10% 46%;
+    --foreground-inverted: 0 0% 100%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
@@ -88,9 +91,12 @@ button {
   }
   .dark {
     --background: 0 0% 3.9%;
+    --background-inverted: 0 0% 100%;
     --foreground: 0 0% 98%;
     --foreground-1: 0 0% 100%;
+    --foreground-2: 240 16.67% 85.88%;
     --foreground-5: 240 10 52%;
+    --foreground-inverted: 240 15.66% 16.27%;
     --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 3.9%;

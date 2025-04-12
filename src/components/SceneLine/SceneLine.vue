@@ -89,10 +89,10 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 </script>
 
 <template>
-  <footer
-    class="bg-surface-1 border-[1px] border-stroke p-3 rounded-xl overflow-x-scroll"
-  >
-    <div class="text-foreground-1 flex flex-nowrap">
+  <footer class="px-4">
+    <div
+      class="flex flex-nowrap bg-surface-1 text-foreground-1 p-3 border-[1px] border-stroke rounded-xl overflow-x-scroll"
+    >
       <span
         v-for="(box, index) in boxes"
         :key="index"

@@ -1,3 +1,5 @@
+import plugin from 'tailwindcss/plugin'
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ['class'],
@@ -10,11 +12,16 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       colors: {
-        background: 'hsl(var(--background))',
+        background: {
+          DEFAULT: 'hsl(var(--background))',
+          inverted: 'hsl(var(--background-inverted))',
+        },
         foreground: {
           DEFAULT: 'hsl(var(--foreground))',
           1: 'hsl(var(--foreground-1))',
+          2: 'hsl(var(--foreground-2))',
           5: 'hsl(var(--foreground-5))',
+          inverted: 'hsl(var(--foreground-inverted))',
         },
         card: {
           DEFAULT: 'hsl(var(--card))',
@@ -55,7 +62,10 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
         surface: {
-          1: 'hsl(var(--surface-1))',
+          1: {
+            DEFAULT: 'hsl(var(--surface-1))',
+            hover: 'hsl(var(--surface-1-hover))',
+          },
           2: 'hsl(var(--surface-2))',
           3: 'hsl(var(--surface-3))',
         },
@@ -89,5 +99,22 @@ export default {
       },
     },
   },
-  plugins: [require('tailwindcss-animate')],
+  plugins: [
+    require('tailwindcss-animate'),
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        '.flex-center': {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        '.flex-col-center': {
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+      })
+    }),
+  ],
 }

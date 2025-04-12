@@ -1,19 +1,46 @@
 <script setup lang="ts">
+import { Layers, Music, AudioLines, Image } from 'lucide-vue-next'
 import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
+import { ref } from 'vue'
+import NavBtn from '../NavBtn'
+
+const navs = [
+  {
+    label: '图片',
+    icon: Image,
+  },
+  {
+    label: '背景',
+    icon: Layers,
+  },
+  {
+    label: '音乐',
+    icon: Music,
+  },
+  {
+    label: '音效',
+    icon: AudioLines,
+  },
+]
+
+const activeNav = ref(0)
 </script>
 
 <template>
-  <Tabs
-    default-value="account"
-    class="bg-surface-2 rounded-xl border-[1px] border-stroke overflow-auto"
-    as="aside"
-  >
-    <div class="p-4 sticky top-0 bg-surface-2 w-full justify-start">
-      <TabsList>
-        <TabsTrigger value="objects">对象</TabsTrigger>
-        <TabsTrigger value="background">背景</TabsTrigger>
-        <TabsTrigger value="sounds"> 音效 </TabsTrigger>
-      </TabsList>
-    </div>
+  <Tabs default-value="account" as="aside" class="flex">
+    <div
+      class="bg-surface-2 rounded-xl border-[1px] border-stroke overflow-auto flex-grow"
+    ></div>
+    <nav class="flex flex-col px-2 gap-1">
+      <NavBtn
+        v-for="nav in navs"
+        :key="nav.label"
+        :active="activeNav === navs.indexOf(nav)"
+        @click="activeNav = navs.indexOf(nav)"
+        :icon="nav.icon"
+        :label="nav.label"
+        position="right"
+      />
+    </nav>
   </Tabs>
 </template>

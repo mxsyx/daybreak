@@ -11,6 +11,7 @@ const scene = computed(() => sceneStore.scene)
   <div v-if="scene" class="mt-2">
     <div>
       <span
+        draggable="true"
         v-for="(grid, index) in scene.grids"
         :key="index"
         :class="

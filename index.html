@@ -5,26 +5,11 @@
     <link rel="icon" type="image/webp" href="/logo.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Daybreak</title>
-    <script>
-      const darkModeMediaQuery = window.matchMedia(
-        '(prefers-color-scheme: dark)'
-      )
-      const currentTheme = localStorage.getItem('theme')
-      const setTheme = (theme) => {
-        if (
-          theme === 'dark' ||
-          (theme === 'system' && darkModeMediaQuery.matches)
-        ) {
-          document.documentElement.classList.add('dark')
-        }
-      }
-      setTheme(currentTheme ?? 'dark')
-    </script>
   </head>
   <body>
     <div
       id="app"
-      class="h-[100vh] bg-surface-3 text-white p-4 grid grid-rows-[1fr_auto] gap-4"
+      class="h-[100vh] bg-surface-3 text-white py-4 flex flex-col gap-4"
     ></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

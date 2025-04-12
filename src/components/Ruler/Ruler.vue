@@ -20,6 +20,6 @@ const toggle = () => {
 
 <template>
   <Toggle @click="toggle()">
-    <Grid3X3 />
+    <Grid3X3 class="text-foreground-5" />
   </Toggle>
 </template>
