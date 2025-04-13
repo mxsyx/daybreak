@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { createRuler } from '@/components/Ruler/utils'
-import { Toggle } from '../ui/toggle'
+import { createRuler } from '@/components/Main/Ruler/utils'
+import { Toggle } from '../../ui/toggle'
 import { Grid3X3 } from 'lucide-vue-next'
 import { shallowRef } from 'vue'
 import { Container } from 'pixi.js'

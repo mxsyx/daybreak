@@ -12,7 +12,7 @@ const handleDragStart = (e: DragEvent) => {
 
 <template>
   <div class="flex flex-wrap gap-4">
-    <!-- <div
+    <div
       class="p-1 rounded-xs border border-dashed border-transparent hover:border-white cursor-pointer"
       draggable
       @dragstart="handleDragStart"
@@ -22,6 +22,6 @@ const handleDragStart = (e: DragEvent) => {
         width="200"
         height="200"
       />
-    </div> -->
+    </div>
   </div>
 </template>
