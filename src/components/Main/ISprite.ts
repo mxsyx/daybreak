@@ -1,5 +1,5 @@
 import { Container, Sprite, Texture, type SpriteOptions } from 'pixi.js'
-import { makeControl } from './utils'
+import { makeControl } from './control'
 
 export class ISprite extends Sprite {
   #control: Container

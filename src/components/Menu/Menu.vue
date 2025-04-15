@@ -7,6 +7,9 @@ const isDark = useDark({
   storageKey: 'color-scheme',
 })
 const toggleDark = useToggle(isDark)
+// const toggleDark = () => {
+//   document.documentElement.classList.toggle('dark')
+// }
 </script>
 
 <template>

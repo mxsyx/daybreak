@@ -12,6 +12,7 @@ const toggle = () => {
   if (!ruler.value) {
     ruler.value = createRuler(pixi.screen.width, pixi.screen.height)
     pixi.stage.addChild(ruler.value)
+    pixi.stage.setChildIndex(ruler.value, 0)
   } else {
     ruler.value.visible = !ruler.value.visible
   }
