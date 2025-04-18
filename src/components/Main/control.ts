@@ -1,6 +1,12 @@
 import { PRIMARY_COLOR } from '@/lib/constants'
 import pixi from '@/pixi'
-import { Container, Graphics, Rectangle, type ViewContainer } from 'pixi.js'
+import {
+  Container,
+  Graphics,
+  Point,
+  Rectangle,
+  type ViewContainer,
+} from 'pixi.js'
 
 export function makeControl(obj: ViewContainer) {
   const container = new Container({
@@ -10,11 +16,13 @@ export function makeControl(obj: ViewContainer) {
 
   let isSelected = false
   let isDragging = false
+  let startPoint: Point | null
+  let dragStartPoint: Point | null
   let border: Graphics | null
   const cornerAnchors: Graphics[] = []
   const edgeAnchors: Graphics[] = []
 
-  container.on('mousedown', () => {
+  container.on('mousedown', (e) => {
     if (!isSelected) {
       const bounds = obj.getBounds()
       border = new Graphics()
@@ -24,15 +32,14 @@ export function makeControl(obj: ViewContainer) {
         bounds.width + 4,
         bounds.height + 4
       )
-      console.log(bounds.x)
 
-      border.stroke({ width: 2, color: PRIMARY_COLOR })
+      border.stroke({ width: 4, color: PRIMARY_COLOR })
       container.addChild(border)
 
       // Add corner anchors
       for (let i = 0; i < 4; i++) {
         const anchor = new Graphics()
-        anchor.circle(0, 0, 8)
+        anchor.circle(0, 0, 10)
         anchor.fill(0xffffff)
         anchor.x = i % 2 === 0 ? bounds.x : bounds.x + bounds.width
         anchor.y = i > 1 ? bounds.y + bounds.height : bounds.y
@@ -44,10 +51,13 @@ export function makeControl(obj: ViewContainer) {
       // Add edge anchors
       for (let i = 0; i < 4; i++) {
         const anchor = new Graphics()
-        anchor.rect(0, 0, i % 2 === 0 ? 4 : 16, i % 2 === 0 ? 16 : 4)
+        anchor.roundRect(0, 0, i % 2 === 0 ? 8 : 28, i % 2 === 0 ? 28 : 8, 15)
         anchor.fill(0xffffff)
-        anchor.x = bounds.x + (i % 2 === 0 ? i / 2 : 0.5) * bounds.width
-        anchor.y = bounds.y + (i === 1 ? 0 : i === 3 ? 1 : 0.5) * bounds.height
+        // prettier-ignore
+        anchor.x = bounds.x + (i % 2 === 0 ? i / 2 : 0.5) * bounds.width + (i === 0 ? -6 : i === 2 ? -2 : -14)
+        // prettier-ignore
+        anchor.y = bounds.y + (i === 1 ? 0 : i === 3 ? 1 : 0.5) * bounds.height + (i === 1 ? -6 : i === 3 ? -2 : -14)
+        anchor.stroke({ width: 1, color: 0x333333 })
         anchor.interactive = true
         edgeAnchors.push(anchor)
         container.addChild(anchor)
@@ -57,20 +67,25 @@ export function makeControl(obj: ViewContainer) {
     }
 
     isDragging = true
+    startPoint = container.position.clone()
+    dragStartPoint = e.global.clone()
     container.hitArea = new Rectangle(-1920 / 2, -1080 / 2, 1920, 1080)
   })
 
   container.onmouseup = container.onmouseupoutside = () => {
     isDragging = false
+    startPoint = null
+    dragStartPoint = null
     container.hitArea = null
   }
 
   container.on('mousemove', (e) => {
-    if (!isDragging) {
+    if (!isDragging || !startPoint || !dragStartPoint) {
       return
     }
-    container.x = e.globalX - container.width / 2
-    container.y = e.globalY - container.height / 2
+
+    container.x = startPoint.x + (e.globalX - dragStartPoint.x)
+    container.y = startPoint.y + (e.globalY - dragStartPoint.y)
   })
 
   pixi.stage.addChild(container)

@@ -20,8 +20,8 @@ const handleDrop = async (e: DragEvent) => {
   const sprite = new ISprite(texture)
   sprite.x = 15
   sprite.y = 15
-  sprite.width = 400
-  sprite.height = 400
+  sprite.width = 300
+  sprite.height = 300
 }
 
 const handleDragOver = (e: DragEvent) => {
