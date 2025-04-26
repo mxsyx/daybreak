@@ -1,12 +1,15 @@
 import { PRIMARY_COLOR } from '@/lib/constants'
 import pixi from '@/pixi'
 import {
+  Assets,
   Circle,
   Container,
   type FederatedPointerEvent,
   Graphics,
   Point,
   Rectangle,
+  Sprite,
+  Texture,
   type ViewContainer,
 } from 'pixi.js'
 import {
@@ -18,6 +21,7 @@ import {
   type ResizeTransformMode,
   type TransformMode,
 } from './constants'
+import rotationIcon from '@/assets/icon-rotation.webp'
 
 class Control {
   #obj: ViewContainer
@@ -25,6 +29,7 @@ class Control {
   #mask: Graphics
   #cornerAnchors: Graphics[] = []
   #edgeAnchors: Graphics[] = []
+  #rotationAnchor!: Sprite
 
   constructor(obj: ViewContainer, initialEvent: FederatedPointerEvent) {
     this.#obj = obj
@@ -32,6 +37,7 @@ class Control {
     let transformMode: TransformMode | null = 'translate'
     let pivotPoint: Point | null
     let startPoint: Point | null = initialEvent.global.clone()
+    let startRotation = 0
     let startWidth = 0
     let startHeight = 0
     let aspectRatio = 1
@@ -101,7 +107,43 @@ class Control {
       this.#edgeAnchors.push(anchor)
     }
 
-    this.#updateTransform()
+    // Add rotation anchor
+    Assets.load(rotationIcon).then((texture: Texture) => {
+      texture.source.autoGenerateMipmaps = true
+      const sprite = new Sprite({
+        texture,
+        eventMode: 'static',
+        cursor: 'grab',
+        width: 36,
+        height: 36,
+      }).on('mousedown', (e) => {
+        e.stopPropagation()
+        transformMode = 'rotate'
+        pivotPoint = obj.position.clone()
+        startWidth = obj.width
+        startHeight = obj.height
+        startRotation = obj.rotation
+
+        const halfWidth = startWidth / 2
+        const halfHeight = startHeight / 2
+        const cosRadians = Math.cos(startRotation)
+        const sinRadians = Math.sin(startRotation)
+        startPoint = new Point(
+          pivotPoint.x + halfWidth * cosRadians - halfHeight * sinRadians,
+          pivotPoint.y + halfWidth * sinRadians + halfHeight * cosRadians
+        )
+        pivotPoint = new Point(
+          pivotPoint.x - halfWidth * (1 - cosRadians) - halfHeight * sinRadians,
+          pivotPoint.y + halfWidth * sinRadians - halfHeight * (1 - cosRadians)
+        )
+
+        container.hitArea = FULL_HIT_AREA
+      })
+      container.addChild(sprite)
+      this.#rotationAnchor = sprite
+
+      this.#updateTransform()
+    })
 
     container
       .on('mousedown', (e) => {
@@ -111,30 +153,26 @@ class Control {
         container.hitArea = FULL_HIT_AREA
       })
       .on('mousemove', (e) => {
-        if (!startPoint) {
+        if (!startPoint || !pivotPoint) {
           return
         }
-        if (transformMode === 'translate' && pivotPoint) {
+
+        const deltaX = e.globalX - startPoint.x
+        const deltaY = e.globalY - startPoint.y
+
+        if (transformMode === 'translate') {
           container.position
-            .set(
-              pivotPoint.x + (e.globalX - startPoint.x),
-              pivotPoint.y + (e.globalY - startPoint.y)
-            )
+            .set(pivotPoint.x + deltaX, pivotPoint.y + deltaY)
             .copyTo(obj.position)
         } else if (
           transformMode &&
-          RESIZE_TRANSFORM_MODES.includes(
-            transformMode as ResizeTransformMode
-          ) &&
-          pivotPoint
+          RESIZE_TRANSFORM_MODES.includes(transformMode as ResizeTransformMode)
         ) {
-          const deltaX = e.globalX - startPoint.x
-          const deltaY = e.globalY - startPoint.y
-
           // prettier-ignore
           const { dx, dy, dw, dh } = ANCHOR_FACTOR[transformMode as ResizeTransformMode]
 
           let newWidth = startWidth + deltaX * dw
+
           let newHeight: number
           if (RESIZE_CORNER_TRANSFORM_MODES.includes(transformMode as any)) {
             newHeight = newWidth / aspectRatio
@@ -151,10 +189,28 @@ class Control {
             .copyTo(obj.position)
 
           this.#updateTransform()
+        } else if (transformMode === 'rotate') {
+          const radians = Math.atan2(deltaY, deltaX) - Math.PI / 2
+
+          obj.rotation = radians
+          container.rotation = radians
+
+          const halfWidth = startWidth / 2
+          const halfHeight = startHeight / 2
+          const cosRadians = Math.cos(radians)
+          const sinRadians = Math.sin(radians)
+          container.position
+            .set(
+              // prettier-ignore
+              pivotPoint.x + halfWidth * (1 - cosRadians) + halfHeight * sinRadians,
+              // prettier-ignore
+              pivotPoint.y - halfWidth * sinRadians + halfHeight * (1 - cosRadians)
+            )
+            .copyTo(obj.position)
         }
       })
 
-    container.onmouseup = container.onmouseupoutside = () => {
+    container.onmouseup = container.onmouseupoutside = (e) => {
       transformMode = null
       pivotPoint = null
       startPoint = null
@@ -162,8 +218,6 @@ class Control {
     }
 
     container.emit('mousedown', initialEvent)
-
-    this.#mask = mask
   }
 
   #updateTransform() {
@@ -190,6 +244,8 @@ class Control {
         (i === 1 ? 0 : i === 3 ? 1 : 0.5) * bounds.height + (i === 1 ? -6 : i === 3 ? -2 : -14)
       )
     })
+
+    this.#rotationAnchor.position.set(bounds.width / 2 - 18, bounds.height + 20)
   }
 
   destroy() {

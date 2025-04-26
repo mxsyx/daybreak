@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Layers, Music, AudioLines, Image } from 'lucide-vue-next'
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs'
+import { Tabs } from '../ui/tabs'
 import { ref } from 'vue'
 import NavBtn from '../NavBtn'
 
