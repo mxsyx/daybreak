@@ -18,8 +18,10 @@ const handleDrop = async (e: DragEvent) => {
   const texture = await Assets.load(`${data.src}?v=1`)
 
   const sprite = new ISprite(texture)
-  sprite.width = 300
-  sprite.height = 300
+  sprite.width = 360
+  sprite.height = 360
+  sprite.x = 960
+  sprite.y = 120
 
   pixi.stage.addChild(sprite)
 }

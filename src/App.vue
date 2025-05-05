@@ -2,7 +2,7 @@
 import { useDark } from '@vueuse/core'
 
 import { Toaster } from '@/components/ui/sonner'
-import SceneLine from '@/components/SceneLine'
+import SceneLine from '@/components/SceneEditor/SceneLine'
 import AssetsExplorer from '@/components/AssetsExplorer'
 import SceneEditor from '@/components/SceneEditor'
 import Menu from '@/components/Menu'
