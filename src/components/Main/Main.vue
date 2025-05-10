@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { Redo2, Undo2 } from 'lucide-vue-next'
-import Ruler from './Ruler'
+import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
-import pixi from '@/pixi'
+import pixi, { pixiOuter } from '@/pixi'
 import { ref, onMounted } from 'vue'
 import { Assets } from 'pixi.js'
-import { ISprite } from './ISprite'
+import ISprite from './ISprite'
 
 const container = ref<HTMLDivElement>()
 onMounted(() => {
+  container.value!.appendChild(pixiOuter.canvas)
   container.value!.appendChild(pixi.canvas)
 })
 
@@ -37,6 +38,7 @@ const handleDragOver = (e: DragEvent) => {
   >
     <div
       ref="container"
+      class="relative"
       @dragover="handleDragOver($event)"
       @drop="handleDrop($event)"
     ></div>
@@ -54,7 +56,7 @@ const handleDragOver = (e: DragEvent) => {
         >▶</button>
 
         <div>
-          <Ruler />
+          <ToggleRuler />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import {
   Assets,
   Circle,
   Container,
+  EventEmitter,
   type FederatedPointerEvent,
   Graphics,
   PI_2,
@@ -11,21 +12,25 @@ import {
   Texture,
   type ViewContainer,
 } from 'pixi.js'
-import pixi from '@/pixi'
+
+import pixi, { pixiOuter } from '@/pixi'
 import { PRIMARY_COLOR } from '@/lib/constants'
 import rotationIcon from '@/assets/icon-rotation.webp'
+
 import {
   CURSOR_SEQ,
   FULL_HIT_AREA,
+  PI_1_2,
   RESIZE_CORNER_TRANSFORM_MODES,
   RESIZE_EDGE_TRANSFORM_MODES,
   RESIZE_TRANSFORM_MODES,
+  STROKE_WIDTH,
   type AnchorIndex,
   type ResizeTransformMode,
   type TransformMode,
 } from './constants'
 
-class Control {
+class Control extends EventEmitter {
   /**
    * The ViewContainer object associated with this control.
    */
@@ -40,6 +45,13 @@ class Control {
    * The mask that is used to render the border of the object.
    */
   #mask!: Graphics
+
+  /**
+   * The outer mask is a graphics object that is used to render the
+   * border of the object. It is a sibling of the #container and is
+   * used to render the border of the object.
+   */
+  #outerMask!: Graphics
 
   /**
    * The graphics that are used to render the corner anchors.
@@ -100,11 +112,14 @@ class Control {
    * @param {FederatedPointerEvent} initialEvent - The initial pointer event that triggered the creation of this control.
    */
   constructor(obj: ViewContainer, initialEvent: FederatedPointerEvent) {
+    super()
+
     this.#obj = obj
     this.#startPoint = initialEvent.global.clone()
 
     this.#createContainer()
     this.#createMask()
+    this.#createOuterMask()
     this.#createCornerAnchors()
     this.#createEdgeAnchors()
     this.#createRotationAnchor()
@@ -164,6 +179,34 @@ class Control {
     })
     this.#container.addChild(mask)
     this.#mask = mask
+  }
+
+  #createOuterMask() {
+    const mask = new Graphics({
+      eventMode: 'static',
+    })
+      .on('mousedown', (e) => {
+        this.#beforeTransform(e, 'translateOuter')
+      })
+      .on('mousemove', (e) => {
+        if (
+          this.#transformMode !== 'translateOuter' ||
+          !this.#startPoint ||
+          !this.#pivotPoint
+        ) {
+          return
+        }
+        const deltaX = e.globalX - this.#startPoint.x
+        const deltaY = e.globalY - this.#startPoint.y
+        this.#handleTranslate(deltaX, deltaY)
+      })
+
+    mask.onmouseup = mask.onmouseupoutside = () => {
+      this.#afterTransform()
+    }
+
+    this.#outerMask = mask
+    pixiOuter.stage.addChild(mask)
   }
 
   /**
@@ -250,6 +293,7 @@ class Control {
     this.#startHeight = this.#obj.height
     this.#startRotation = this.#obj.rotation
     this.#container.hitArea = FULL_HIT_AREA
+    this.#outerMask.hitArea = FULL_HIT_AREA
   }
 
   /**
@@ -296,16 +340,60 @@ class Control {
     )
   }
 
+  #emitTransformEvent(transformMode: TransformMode) {
+    const { x, y, rotation } = this.#obj
+    this.emit('transform', { transformMode, position: { x, y }, rotation })
+  }
+
   /**
    * Called when the object is being translated.
    *
    * @param {number} deltaX - The horizontal distance to move the object.
    * @param {number} deltaY - The vertical distance to move the object.
    */
-  #handleTranslate(deltaX: number, deltaY: number) {
-    this.#container.position
-      .set(this.#pivotPoint!.x + deltaX, this.#pivotPoint!.y + deltaY)
-      .copyTo(this.#obj.position)
+  #handleTranslate(deltaX: number, deltaY: number, emitEvent: boolean = true) {
+    const { width, height } = this.#obj.getBounds()
+
+    let x = Math.max(this.#pivotPoint!.x + deltaX, -width)
+    let y = Math.max(this.#pivotPoint!.y + deltaY, -height)
+    x = Math.min(x, pixi.canvas.width)
+    y = Math.min(y, pixi.canvas.height)
+
+    this.#container.position.set(x, y).copyTo(this.#obj.position)
+    this.#syncOuterMaskPosition()
+
+    if (emitEvent) {
+      this.#emitTransformEvent('translate')
+    }
+  }
+
+  /**
+   * Moves the object to a new position such that it is aligned with the top left
+   * corner of the canvas. The object is not resized.
+   *
+   * @param {{ x?: number, y?: number }} options - The target coordinates.
+   * If not provided, the object will be moved to its current position.
+   */
+  stickToEdge(
+    data:
+      | number
+      | {
+          x?: number
+          y?: number
+        }
+  ) {
+    if (typeof data === 'number') {
+      const r = Math.sqrt(2)
+      data += PI_1_2
+      this.#hanldeRotation(r * Math.cos(data), r * Math.sin(data), false)
+    } else {
+      const { x = this.#obj.x, y = this.#obj.y } = data
+      this.#handleTranslate(
+        x - this.#pivotPoint!.x,
+        y - this.#pivotPoint!.y,
+        false
+      )
+    }
   }
 
   /**
@@ -462,8 +550,8 @@ class Control {
    * @param {number} deltaX - The change in the x-coordinate for rotation.
    * @param {number} deltaY - The change in the y-coordinate for rotation.
    */
-  #hanldeRotation(deltaX: number, deltaY: number) {
-    const theta = Math.atan2(deltaY, deltaX) - Math.PI / 2
+  #hanldeRotation(deltaX: number, deltaY: number, emitEvent: boolean = true) {
+    const theta = Math.atan2(deltaY, deltaX) - PI_1_2
 
     this.#obj.rotation = theta
     this.#container.rotation = theta
@@ -472,6 +560,7 @@ class Control {
     const halfHeight = this.#startHeight / 2
     const cosTheta = Math.cos(theta)
     const sinTheta = Math.sin(theta)
+
     this.#container.position
       .set(
         // prettier-ignore
@@ -480,6 +569,61 @@ class Control {
         this.#pivotPoint!.y - halfWidth * sinTheta + halfHeight * (1 - cosTheta)
       )
       .copyTo(this.#obj.position)
+    this.#syncOuterMaskPosition()
+
+    if (emitEvent) {
+      this.#emitTransformEvent('rotate')
+    }
+  }
+
+  /**
+   * Updates the position of the outer mask in the outer canvas.
+   *
+   * Since the outer canvas is a separate DOM element from the main canvas,
+   * we need to map the global position of the mask in the main canvas to
+   * the outer canvas.
+   *
+   * This function is called whenever the position of the mask changes in
+   * the main canvas.
+   */
+  #syncOuterMaskPosition() {
+    const size = this.#mask.getSize()
+    const globalPosition = this.#mask.getGlobalPosition()
+    const { width: canvasWidth, height: canvasHeight } = pixi.canvas
+    // prettier-ignore
+    const { width: outerCanvasWidth, height: outerCanvasHeight } = pixiOuter.canvas
+
+    const cStyle = getComputedStyle(pixi.canvas)
+    const cWidth = parseFloat(cStyle.width)
+    const cHeight = parseFloat(cStyle.height)
+
+    const cOuterStyle = getComputedStyle(pixiOuter.canvas)
+    const cOuterWidth = parseFloat(cOuterStyle.width)
+    const cOuterHeight = parseFloat(cOuterStyle.height)
+
+    const cssWidth = ((size.width - STROKE_WIDTH) / canvasWidth) * cWidth
+    const width = (cssWidth / cOuterWidth) * outerCanvasWidth
+
+    // prettier-ignore
+    const cssHeight = ((size.height - STROKE_WIDTH) / canvasHeight) * cHeight
+    const height = (cssHeight / cOuterHeight) * outerCanvasHeight
+
+    this.#outerMask
+      .clear()
+      .rect(-STROKE_WIDTH / 2, -STROKE_WIDTH / 2, width, height)
+      .fill('transparent')
+      .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
+
+    const offsetX = (globalPosition.x / canvasWidth) * cWidth
+    // prettier-ignore
+    const x = (((cOuterWidth - cWidth) / 2 + offsetX) / cOuterWidth) * outerCanvasWidth
+
+    const offsetY = (globalPosition.y / canvasHeight) * cHeight
+    // prettier-ignore
+    const y = (((cOuterHeight - cHeight) / 2 + offsetY) / cOuterHeight) * outerCanvasHeight
+
+    this.#outerMask.rotation = this.#container.rotation
+    this.#outerMask.position.set(x, y)
   }
 
   /**
@@ -492,9 +636,16 @@ class Control {
 
     this.#mask
       .clear()
-      .rect(-2, -2, width + 4, height + 4)
+      .rect(
+        -STROKE_WIDTH / 2,
+        -STROKE_WIDTH / 2,
+        width + STROKE_WIDTH,
+        height + STROKE_WIDTH
+      )
       .fill('transparent')
-      .stroke({ width: 4, color: PRIMARY_COLOR })
+      .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
+      .getGlobalPosition()
+    this.#syncOuterMaskPosition()
 
     this.#cornerAnchors.forEach((anchor, i) => {
       anchor.position.set(
@@ -540,6 +691,7 @@ class Control {
     this.#pivotPoint = null
     this.#startPoint = null
     this.#container.hitArea = null
+    this.#outerMask.hitArea = null
   }
 
   /**
@@ -548,6 +700,7 @@ class Control {
    */
   destroy() {
     this.#container.destroy({ children: true })
+    this.#outerMask.destroy()
   }
 }
 

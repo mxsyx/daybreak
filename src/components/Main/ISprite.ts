@@ -1,8 +1,9 @@
 import { Sprite, Texture, type SpriteOptions } from 'pixi.js'
 import Control from './Control'
 import { eventEmitter } from '@/pixi'
+import useRulerStore from '@/store/ruler'
 
-export class ISprite extends Sprite {
+class ISprite extends Sprite {
   #control: Control | null = null
   #isSelected = false
 
@@ -15,6 +16,10 @@ export class ISprite extends Sprite {
       if (!this.#isSelected) {
         this.#isSelected = true
         this.#control = new Control(this, e)
+        const rulerStore = useRulerStore()
+        this.#control.on('transform', (e) => {
+          rulerStore.ruler?.highlight(e, this.#control!)
+        })
       }
     })
 
@@ -26,3 +31,5 @@ export class ISprite extends Sprite {
     })
   }
 }
+
+export default ISprite

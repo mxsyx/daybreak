@@ -1,4 +1,4 @@
-import { Rectangle } from 'pixi.js'
+import { Rectangle, type PointData } from 'pixi.js'
 
 export const RESIZE_CORNER_TRANSFORM_MODES = [
   'resizeTL',
@@ -19,7 +19,11 @@ export const RESIZE_TRANSFORM_MODES = [
 
 export type ResizeTransformMode = (typeof RESIZE_TRANSFORM_MODES)[number]
 
-export type TransformMode = 'translate' | ResizeTransformMode | 'rotate'
+export type TransformMode =
+  | 'translate'
+  | 'translateOuter'
+  | ResizeTransformMode
+  | 'rotate'
 
 export const FULL_HIT_AREA = new Rectangle(-1920, -1080, 1920 * 2, 1080 * 2)
 
@@ -51,3 +55,13 @@ export const CURSOR_SEQ = [
   // Left
   'ew-resize',
 ] as const
+
+export const STROKE_WIDTH = 4
+
+export const PI_1_2 = Math.PI / 2
+
+export interface TransformEvent {
+  transformMode: TransformMode
+  position: PointData
+  ratation: number
+}
