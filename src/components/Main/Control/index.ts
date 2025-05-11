@@ -18,6 +18,7 @@ import { PRIMARY_COLOR } from '@/lib/constants'
 import rotationIcon from '@/assets/icon-rotation.webp'
 
 import {
+  ANCHOR_DIRECTIONS,
   CURSOR_SEQ,
   FULL_HIT_AREA,
   PI_1_2,
@@ -26,11 +27,14 @@ import {
   RESIZE_TRANSFORM_MODES,
   STROKE_WIDTH,
   type AnchorIndex,
+  type Directions,
   type ResizeTransformMode,
   type TransformMode,
 } from './constants'
 
 class Control extends EventEmitter {
+  readonly id: string
+
   /**
    * The ViewContainer object associated with this control.
    */
@@ -91,6 +95,16 @@ class Control extends EventEmitter {
   #resizePivotPoint: Point | null = null
 
   /**
+   * The previous change in the X-axis during a transformation.
+   */
+  #prevDeltaX: number = 0
+
+  /**
+   * The previous change in the Y-axis during a transformation.
+   */
+  #prevDeltaY: number = 0
+
+  /**
    * The rotation of the object before transformation.
    */
   #startRotation = 0
@@ -116,6 +130,7 @@ class Control extends EventEmitter {
 
     this.#obj = obj
     this.#startPoint = initialEvent.global.clone()
+    this.id = crypto.randomUUID()
 
     this.#createContainer()
     this.#createMask()
@@ -125,6 +140,19 @@ class Control extends EventEmitter {
     this.#createRotationAnchor()
 
     this.#container.emit('mousedown', initialEvent)
+  }
+
+  /**
+   * Returns the size of the ViewContainer object associated with this control.
+   *
+   * @returns The size of the ViewContainer object associated with this control.
+   */
+  get size() {
+    return this.#obj.getSize()
+  }
+
+  get position() {
+    return this.#obj.position.clone()
   }
 
   /**
@@ -163,6 +191,9 @@ class Control extends EventEmitter {
         } else if (transformMode === 'rotate') {
           this.#hanldeRotation(deltaX, deltaY)
         }
+
+        this.#prevDeltaX = deltaX
+        this.#prevDeltaY = deltaY
       })
 
     container.onmouseup = container.onmouseupoutside = () => {
@@ -340,9 +371,15 @@ class Control extends EventEmitter {
     )
   }
 
-  #emitTransformEvent(transformMode: TransformMode) {
-    const { x, y, rotation } = this.#obj
-    this.emit('transform', { transformMode, position: { x, y }, rotation })
+  #emitTransformEvent(directions: Directions) {
+    const { x, y, rotation, width, height } = this.#obj
+    this.emit('transform', {
+      transformMode: this.#transformMode,
+      position: { x, y },
+      rotation: rotation,
+      size: { width, height },
+      directions,
+    })
   }
 
   /**
@@ -363,7 +400,22 @@ class Control extends EventEmitter {
     this.#syncOuterMaskPosition()
 
     if (emitEvent) {
-      this.#emitTransformEvent('translate')
+      const directionX = deltaX - this.#prevDeltaX
+      const directionY = deltaY - this.#prevDeltaY
+      const directions: Directions = []
+
+      if (directionX < 0) {
+        directions.push('left')
+      } else if (directionX > 0) {
+        directions.push('right')
+      }
+      if (directionY < 0) {
+        directions.push('top')
+      } else if (directionY > 0) {
+        directions.push('bottom')
+      }
+
+      this.#emitTransformEvent(directions)
     }
   }
 
@@ -540,6 +592,14 @@ class Control extends EventEmitter {
       .set(this.#pivotPoint!.x - (x2 - xr), this.#pivotPoint!.y - (y2 - yr))
       .copyTo(this.#obj.position)
     this.#pivotPoint = this.#container.position.clone()
+
+    this.#emitTransformEvent(
+      ANCHOR_DIRECTIONS[
+        RESIZE_TRANSFORM_MODES.indexOf(
+          this.#transformMode as ResizeTransformMode
+        )
+      ]
+    )
   }
 
   /**
@@ -572,7 +632,7 @@ class Control extends EventEmitter {
     this.#syncOuterMaskPosition()
 
     if (emitEvent) {
-      this.#emitTransformEvent('rotate')
+      this.#emitTransformEvent([])
     }
   }
 
@@ -701,6 +761,8 @@ class Control extends EventEmitter {
   destroy() {
     this.#container.destroy({ children: true })
     this.#outerMask.destroy()
+    this.emit('destroy', this.id)
+    super.removeAllListeners()
   }
 }
 

@@ -15,7 +15,7 @@ const toggle = () => {
     pixi.stage.addChild(ruler.container)
     pixi.stage.setChildIndex(ruler.container, 0)
   } else {
-    rulerStore.ruler.container.visible = !rulerStore.ruler.container.visible
+    rulerStore.ruler.visiable = !rulerStore.ruler.visiable
   }
 }
 </script>

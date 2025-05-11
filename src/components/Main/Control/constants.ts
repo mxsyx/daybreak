@@ -60,8 +60,23 @@ export const STROKE_WIDTH = 4
 
 export const PI_1_2 = Math.PI / 2
 
+export const DIRECTIONS = ['left', 'top', 'right', 'bottom'] as const
+export type Directions = (typeof DIRECTIONS)[number][]
+export const ANCHOR_DIRECTIONS: Directions[] = [
+  ['top', 'left'],
+  ['top', 'right'],
+  ['bottom', 'right'],
+  ['bottom', 'left'],
+  ['left'],
+  ['top'],
+  ['right'],
+  ['bottom'],
+] as const
+
 export interface TransformEvent {
   transformMode: TransformMode
   position: PointData
-  ratation: number
+  rotation: number
+  size: Size
+  directions: Directions
 }

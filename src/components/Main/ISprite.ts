@@ -15,11 +15,20 @@ class ISprite extends Sprite {
     this.on('mousedown', (e) => {
       if (!this.#isSelected) {
         this.#isSelected = true
-        this.#control = new Control(this, e)
-        const rulerStore = useRulerStore()
-        this.#control.on('transform', (e) => {
-          rulerStore.ruler?.highlight(e, this.#control!)
-        })
+        const control = new Control(this, e)
+        const { ruler } = useRulerStore()
+        control
+          .on('transform', (e) => {
+            if (ruler && ruler.visiable) {
+              ruler.highlight(e, control)
+            }
+          })
+          .on('destroy', () => {
+            if (ruler) {
+              ruler.unhighlight(control)
+            }
+          })
+        this.#control = control
       }
     })
 

@@ -10,7 +10,13 @@ import {
 import { PRIMARY_COLOR } from '@/lib/constants'
 
 import type Control from '../Control'
-import { PI_1_2, STROKE_WIDTH, type TransformEvent } from '../Control/constants'
+import {
+  DIRECTIONS,
+  PI_1_2,
+  STROKE_WIDTH,
+  type Directions,
+  type TransformEvent,
+} from '../Control/constants'
 
 /**
  * Text style configuration for axis labels.
@@ -42,8 +48,14 @@ class Ruler {
   #width: number
   #height: number
   #cellSize: number
-  #hightlightLineX: Graphics
-  #hightlightLineY: Graphics
+
+  /**
+   * Array of graphics objects used to highlight grid lines.
+   * These lines are highlighted based on user interactions.
+   */
+  #hightlightLines: Graphics[]
+
+  #hightlightTarget: Control | null = null
 
   /**
    * Create a ruler with axes.
@@ -64,11 +76,15 @@ class Ruler {
     const grid = new Graphics()
     const axesX: Text[] = []
     const axesY: Text[] = []
-    const highlightLineX = new Graphics()
-    const highlightLineY = new Graphics()
+    const highlightLines = [
+      new Graphics(),
+      new Graphics(),
+      new Graphics(),
+      new Graphics(),
+    ]
     const quadrantLenX = width / 2
     const quadrantLenY = height / 2
-    const axesSize = cellSize * AXES_TEXT_HEIGHT
+    const axesSize = this.#getAxesSize()
 
     grid.setStrokeStyle({ width: 1, color: 0x333333 })
     for (let x = cellSize; x < width; x += cellSize) {
@@ -98,78 +114,154 @@ class Ruler {
     }
 
     const container = new Container()
-    container.addChild(grid, ...axesX, ...axesY, highlightLineX, highlightLineY)
+    container.addChild(grid, ...axesX, ...axesY, ...highlightLines)
 
     this.container = container
-    this.#hightlightLineX = highlightLineX
-    this.#hightlightLineY = highlightLineY
+    this.#hightlightLines = highlightLines
   }
 
-  highlight(e: TransformEvent, control: Control) {
-    if (e.transformMode === 'translate') {
-      this.#highlightByPosition(e.position, control)
-    } else if (e.transformMode === 'rotate') {
-      this.#highlightByRotation(e.ratation, e.position, control)
+  get visiable() {
+    return this.container.visible
+  }
+
+  set visiable(value: boolean) {
+    this.container.visible = value
+    if (!value) {
+      this.#clearHightlight()
     }
   }
 
   /**
-   * Highlights the grid lines around the given position.
-   * The highlight is shown as a line along the x and y axes.
-   * The line is highlighted if the mouse position is within the {@link HIGHTLIGHT_THRESHOLD} distance
-   * from the grid line.
+   * Clear the highlight of the grid line.
    *
-   * @param position The position to highlight the lines around.
-   * @param control The control to which the highlight is associated.
+   * It will clear all the highlighted grid lines.
    */
-  #highlightByPosition(position: PointData, control: Control) {
+  #clearHightlight() {
+    this.#hightlightLines.forEach((line) => {
+      line.clear()
+    })
+  }
+
+  /**
+   * Highlights a grid line with the given coordinates.
+   *
+   * It will set the stroke style of the line to the {@link PRIMARY_COLOR} with a width of {@link STROKE_WIDTH}.
+   * @param line The graphics object which represents the grid line to highlight.
+   * @param x1 The starting x coordinate of the line.
+   * @param y1 The starting y coordinate of the line.
+   * @param x2 The ending x coordinate of the line.
+   * @param y2 The ending y coordinate of the line.
+   */
+  #highlight(line: Graphics, x1: number, y1: number, x2: number, y2: number) {
+    line
+      .clear()
+      .moveTo(x1, y1)
+      .lineTo(x2, y2)
+      .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
+  }
+
+  /**
+   * Get the size of the axes.
+   *
+   * The size of the axes is equal to the cell size multiplied by the height of the axes text.
+   * @returns The size of the axes.
+   */
+  #getAxesSize() {
+    return this.#cellSize * AXES_TEXT_HEIGHT
+  }
+
+  /**
+   * Highlights the grid line of the ruler according to the given pivot point and the direction of the control.
+   *
+   * It will highlight the grid line if the pivot point is within the {@link HIGHTLIGHT_THRESHOLD} distance from the grid line.
+   * The control will also be snapped to the highlighted grid line.
+   * @param pivotPoint The pivot point of the control.
+   * @param lineIndex The index of the grid line to highlight.
+   * @param inDirection Whether the pivot point is moving in the direction of the control.
+   * @param control The control whose size is used to determine the position of the highlighted grid line.
+   */
+  #highlightByPosition(
+    pivotPoint: PointData,
+    lineIndex: number,
+    inDirection: boolean,
+    control: Control
+  ) {
     const cellSize = this.#cellSize
-    const axesSize = cellSize * AXES_TEXT_HEIGHT
-    const deltaX = position.x % cellSize
-    const deltaY = position.y % cellSize
-    let xIdx = -1
-    let yIdx = -1
+    const axesSize = this.#getAxesSize()
+    const highlightLine = this.#hightlightLines[lineIndex]
 
-    if (deltaX < HIGHTLIGHT_THRESHOLD) {
-      xIdx = Math.floor(position.x / cellSize)
-    } else if (deltaX > cellSize - HIGHTLIGHT_THRESHOLD) {
-      xIdx = Math.ceil(position.x / cellSize)
+    let p: number
+    let idx: number
+    if (lineIndex === 0) {
+      p = pivotPoint.x
+    } else if (lineIndex === 1) {
+      p = pivotPoint.y
+    } else if (lineIndex === 2) {
+      p = pivotPoint.x + control.size.width
     } else {
-      this.#hightlightLineX.clear()
+      p = pivotPoint.y + control.size.height
     }
-    if (deltaY < HIGHTLIGHT_THRESHOLD) {
-      yIdx = Math.floor(position.y / cellSize)
-    } else if (deltaY > cellSize - HIGHTLIGHT_THRESHOLD) {
-      yIdx = Math.ceil(position.y / cellSize)
+    const delta = p % cellSize
+
+    if (delta < HIGHTLIGHT_THRESHOLD) {
+      idx = Math.floor(p / cellSize)
+    } else if (delta > cellSize - HIGHTLIGHT_THRESHOLD) {
+      idx = Math.ceil(p / cellSize)
     } else {
-      this.#hightlightLineY.clear()
+      highlightLine.clear()
+      return
     }
 
-    if (xIdx !== -1) {
-      const x = cellSize * xIdx - STROKE_WIDTH / 2
-      this.#hightlightLineX
-        .clear()
-        .moveTo(x, 0)
-        .lineTo(x, this.#height - axesSize)
-        .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
-      control.stickToEdge({ x })
-    }
-    if (yIdx !== -1) {
-      const y = cellSize * yIdx - STROKE_WIDTH / 2
-      this.#hightlightLineY
-        .clear()
-        .moveTo(axesSize, y)
-        .lineTo(this.#width, y)
-        .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
-      control.stickToEdge({ y })
+    if (inDirection) {
+      const xy = cellSize * idx - STROKE_WIDTH / 2
+      if (lineIndex % 2 === 0) {
+        this.#highlight(highlightLine, xy, 0, xy, this.#height - axesSize)
+        control.stickToEdge({
+          x: xy - (lineIndex === 0 ? 0 : control.size.width),
+        })
+      } else {
+        this.#highlight(highlightLine, axesSize, xy, this.#width, xy)
+        control.stickToEdge({
+          y: xy - (lineIndex === 1 ? 0 : control.size.height),
+        })
+      }
     }
   }
 
-  #highlightByRotation(
-    rotation: number,
+  /**
+   * Highlights the grid lines of the ruler according to the given position and directions.
+   *
+   * @param position The position of the control.
+   * @param directions The directions of the control.
+   * @param control The control whose position and rotation are used to determine the highlight.
+   */
+  #highlightByTranslate(
     position: PointData,
+    directions: Directions,
     control: Control
   ) {
+    this.#hightlightLines.forEach((_, i) => {
+      this.#highlightByPosition(
+        position,
+        i,
+        directions.indexOf(DIRECTIONS[i]) !== -1,
+        control
+      )
+    })
+  }
+
+  /**
+   * Highlights the grid lines of the ruler according to the given rotation and control.
+   *
+   * If the rotation is within the {@link HIGHTLIGHT_THRESHOLD} distance from one of the four axes,
+   * the highlight is shown as a line along the rotated axes around the given position.
+   * The line is highlighted if the rotation is within the
+   * {@link HIGHTLIGHT_THRESHOLD} distance from one of the four axes.
+   *
+   * @param rotation The rotation of the control.
+   * @param control The control whose position and rotation are used to determine the highlight.
+   */
+  #highlightByRotation(rotation: number, control: Control) {
     if (rotation < 0) {
       rotation += PI_2
     }
@@ -184,9 +276,85 @@ class Ruler {
 
     if (idx !== -1) {
       control.stickToEdge(idx * PI_1_2)
+
+      const highlightLine = this.#hightlightLines[idx]
+      const axesSize = this.#getAxesSize()
+      let x1: number
+      let y1: number
+      let x2: number
+      let y2: number
+      if (idx % 2 === 0) {
+        x1 = control.position.x
+        y1 = 0
+        x2 = x1
+        y2 = this.#height - axesSize
+      } else {
+        x1 = axesSize
+        y1 = control.position.y
+        x2 = this.#width
+        y2 = y1
+      }
+
+      this.#clearHightlight()
+      this.#highlight(highlightLine, x1, y1, x2, y2)
+      setTimeout(() => {
+        highlightLine.clear()
+      }, 300)
+    }
+  }
+
+  /**
+   * Highlights the grid lines of the ruler during a resize operation by translating the position.
+   *
+   * This method is used to determine the highlight based on the current position and directions
+   * during a resize event. It utilizes the translation logic to decide which grid lines to highlight.
+   *
+   * @param position The current position of the control being resized.
+   * @param directions The directions in which the control is being resized.
+   * @param control The control that is being resized and whose position is used to determine the highlight.
+   */
+  #highlightByResize(
+    position: PointData,
+    directions: Directions,
+    control: Control
+  ) {
+    this.#highlightByTranslate(position, directions, control)
+  }
+
+  /**
+   * Highlights the grid lines of the ruler according to the given transform event.
+   *
+   * If the transform mode is 'translate', the highlight is shown as a line along the x and y axes
+   * around the given position. The line is highlighted if the mouse position is within the
+   * {@link HIGHTLIGHT_THRESHOLD} distance from the grid line.
+   *
+   * If the transform mode is 'rotate', the highlight is shown as a line along the rotated axes
+   * around the given position. The line is highlighted if the rotation is within the
+   * {@link HIGHTLIGHT_THRESHOLD} distance from one of the four axes.
+   *
+   * @param e The transform event that triggered the highlight.
+   * @param control The control whose position and rotation are used to determine the highlight.
+   */
+  highlight(e: TransformEvent, control: Control) {
+    if (this.#hightlightTarget !== control) {
+      this.#clearHightlight()
+      this.#hightlightTarget = control
     }
 
-    this.#highlightByPosition(position, control)
+    if (e.transformMode === 'translate') {
+      this.#highlightByTranslate(e.position, e.directions, control)
+    } else if (e.transformMode === 'rotate') {
+      this.#highlightByRotation(e.rotation, control)
+    } else {
+      this.#highlightByResize(e.position, e.directions, control)
+    }
+  }
+
+  unhighlight(control: Control) {
+    if (this.#hightlightTarget === control) {
+      this.#clearHightlight()
+      this.#hightlightTarget = null
+    }
   }
 
   /**
