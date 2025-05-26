@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const handleDragStart = (e: DragEvent) => {
+  console.log(e)
+  return
   e.dataTransfer!.setData(
     'application/json',
     JSON.stringify({

@@ -1,20 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { CloudUpload, LoaderIcon } from 'lucide-vue-next' 
+import { ref, shallowRef, type HTMLAttributes } from 'vue'
+import { CloudUpload, LoaderIcon } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { toast } from 'vue-sonner'
+import { encode } from '@jsquash/webp'
+import { useVModel } from '@vueuse/core'
 
 // 定义 props
 const props = defineProps<{
-  value?: string
-  onChange: (data: string) => void
+  defaultValue?: string
+  modelValue?: string
+  class?: HTMLAttributes['class']
+}>()
+
+const emits = defineEmits<{
+  (e: 'update:modelValue', payload: string): void
 }>()
 
 // 支持的图片类型
 const supportedTypes = ['image/jpeg', 'image/png', 'image/webp']
 
 // 状态
-const fileInput = ref<HTMLInputElement | null>(null)
+const fileInput = shallowRef<HTMLInputElement | null>(null)
 const isLoading = ref(false)
 
 // 处理文件上传
@@ -41,13 +48,15 @@ const processFile = async (file: File) => {
       ctx.drawImage(img, 0, 0)
       const rawImageData = ctx.getImageData(0, 0, img.width, img.height)
 
-      const webpBuffer = await window.encodeWebp(rawImageData)
+      const webpBuffer = await encode(rawImageData)
 
       const uint8Array = new Uint8Array(webpBuffer)
       const base64String = btoa(
         String.fromCharCode.apply(null, Array.from(uint8Array))
       )
-      props.onChange(`data:image/webp;base64,${base64String}`)
+      console.log(`data:image/webp;base64,${base64String}`)
+
+      emits('update:modelValue', `data:image/webp;base64,${base64String}`)
     } catch (error: any) {
       toast({ title: error.message })
     } finally {
@@ -65,16 +74,12 @@ const handleFileClick = () => {
 
 <template>
   <div class="inline-flex items-center gap-6">
-    <!-- 加载 WebP 编码脚本 -->
-    <script :src="`${CDN_URL}/webpp/index.js`"></script>
-
-    <!-- 文件输入 -->
     <input
       type="file"
       ref="fileInput"
       style="display: none"
       accept="image/jpeg, image/png, image/webp"
-      @change="(e) => processFile((e.target as HTMLInputElement).files![0])"
+      @change="processFile(($event.target as HTMLInputElement).files![0])"
     />
 
     <!-- 图片和上传按钮 -->
@@ -83,14 +88,16 @@ const handleFileClick = () => {
       @click="handleFileClick"
     >
       <img
-        v-if="value"
-        :src="value"
+        v-if="props.modelValue"
+        :src="props.modelValue"
         alt=""
         width="100"
         height="100"
         class="rounded-full"
       />
-      <Button class="absolute right-0 bottom-0 bg-gray-800 text-white size-6 px-5 py-2 hover:bg-gray-700">
+      <Button
+        class="absolute right-0 bottom-0 bg-gray-800 text-white size-6 px-5 py-2 hover:bg-gray-700"
+      >
         <LoaderIcon v-if="isLoading" :size="14" />
         <CloudUpload v-else :size="14" />
       </Button>

@@ -14,6 +14,7 @@ export default {
       colors: {
         background: {
           DEFAULT: 'hsl(var(--background))',
+          1: 'hsl(var(--background-1))',
           inverted: 'hsl(var(--background-inverted))',
         },
         foreground: {
@@ -73,7 +74,15 @@ export default {
           5: 'hsl(var(--alpha-5))',
           10: 'hsl(var(--alpha-10))',
         },
-        stroke: 'hsl(var(--stroke))',
+        stroke: {
+          DEFAULT: 'hsl(var(--stroke))',
+          1: 'hsl(var(--stroke-1))',
+        },
+        gray: {
+          background: {
+            3: 'hsl(var(--gray-background-3))',
+          },
+        },
       },
       keyframes: {
         'accordion-down': {
@@ -99,6 +108,7 @@ export default {
       },
     },
   },
+
   plugins: [
     require('tailwindcss-animate'),
     plugin(function ({ addUtilities }) {
@@ -120,6 +130,9 @@ export default {
           top: 0,
           right: 0,
           bottom: 0,
+        },
+        '.shadow-none': {
+          boxShadow: 'none',
         },
       })
     }),

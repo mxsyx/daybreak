@@ -16,7 +16,10 @@ onMounted(() => {
 const handleDrop = async (e: DragEvent) => {
   e.preventDefault()
   const data = JSON.parse(e.dataTransfer!.getData('application/json'))
+  console.log(1)
+
   const texture = await Assets.load(`${data.src}?v=1`)
+  console.log(texture)
 
   const sprite = new ISprite(texture)
   sprite.width = 360

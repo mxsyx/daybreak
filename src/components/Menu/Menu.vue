@@ -10,6 +10,19 @@ const toggleDark = useToggle(isDark)
 // const toggleDark = () => {
 //   document.documentElement.classList.toggle('dark')
 // }
+
+const test = () => {
+  import('jieba-wasm').then(({ default: init, cut }) => {
+    init().then(() => {
+      console.log(
+        cut(
+          'Universally query points. This endpoint covers all capabilities of search, recommend, discover, filters. But also enables hybrid and multi-stage queries.',
+          true
+        )
+      )
+    })
+  })
+}
 </script>
 
 <template>
@@ -23,6 +36,7 @@ const toggleDark = useToggle(isDark)
     </div>
 
     <div class="flex-center gap-2">
+      <Button class="h-8" @click="test">Run</Button>
       <Button class="size-8" variant="ghost" @click="toggleDark()">
         <Sun v-if="isDark" :size="12" />
         <Moon v-else :size="12" class="text-foreground-1" />

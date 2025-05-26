@@ -18,13 +18,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* fix: font `Noto Sans CJK SC` at Linux Chrome font-weight not working */
-@font-face {
-  font-family: 'Noto Sans CJK SC';
-  src: local('Noto Sans CJK SC'), format('truetype');
-  font-synthesis: weight;
-}
-
 body {
   margin: 0px;
 }
@@ -64,7 +57,7 @@ button {
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
     --primary: 266 100% 59%;
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 240 16% 16%;
     --secondary: 0 0% 96.1%;
     --secondary-foreground: 0 0% 9%;
     --muted: 0 0% 96.1%;
@@ -88,21 +81,25 @@ button {
     --alpha-5: 240 17.39% 9.02% / 5%;
     --alpha-10: 240 17.39% 9.02% / 10%;
     --stroke: 0 0% 100% / 5%;
+    --stroke-1: 266 100% 59.22%;
+    --gray-background-3: 240 10.71% 43.92%;
+    --background-1: 0 0% 100%;
   }
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 240 15.49% 13.92%;
+    --background-1: 236 16.13% 18.24%;
     --background-inverted: 0 0% 100%;
     --foreground: 0 0% 98%;
     --foreground-1: 0 0% 100%;
     --foreground-2: 240 16.67% 85.88%;
     --foreground-5: 240 10 52%;
     --foreground-inverted: 240 15.66% 16.27%;
-    --card: 0 0% 3.9%;
+    --card: 240 15.49% 13.92%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 236 16.13% 18.24%;
     --popover-foreground: 0 0% 98%;
     --primary: 266 100% 59%;
-    --primary-foreground: 0 0% 9%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 14.9%;
@@ -125,6 +122,8 @@ button {
     --alpha-5: 0 0% 100% / 5%;
     --alpha-10: 0 0% 100% / 10%;
     --stroke: 0 0% 100% / 5%;
+    --stroke-1: 266 100% 59.22%;
+    --gray-background-3: 240 12.43% 63.73%;
   }
 }
 

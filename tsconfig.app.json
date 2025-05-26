@@ -14,15 +14,9 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "allowJs": true
+    "allowJs": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "../dev/backup/SceneEditor.vue",
-    "../dev/backup/index copy.ts",
-    "../dev/backup/constants copy.ts"
-  ],
-  "exclude": ["src/components/ui/**/*"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
