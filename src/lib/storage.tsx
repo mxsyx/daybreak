@@ -35,7 +35,6 @@ class Storage {
   }
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const storages = {
   background: new Storage('background'),
   music: new Storage('music'),

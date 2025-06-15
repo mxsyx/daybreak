@@ -2,7 +2,7 @@
 import { Button } from '@/components/ui/button'
 import { Bot, Box, Folder } from 'lucide-vue-next'
 import { ref } from 'vue'
-import NavBtn from '../NavBtn/NavBtn.vue'
+import NavBtn from '@/components/NavBtn'
 import VideoExplorer from './VideoExplorer'
 import { Input } from '@/components/ui/input'
 import Contribution from './Contribution.vue'
@@ -35,10 +35,10 @@ const activeNav = ref(0)
         v-for="nav in navs"
         :key="nav.label"
         :active="activeNav === navs.indexOf(nav)"
-        @click="activeNav = navs.indexOf(nav)"
         :icon="nav.icon"
         :label="nav.label"
         position="left"
+        @click="activeNav = navs.indexOf(nav)"
       />
     </nav>
     <div

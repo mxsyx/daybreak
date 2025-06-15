@@ -11,12 +11,12 @@ const scene = computed(() => sceneStore.scene)
   <div v-if="scene" class="mt-2">
     <div>
       <span
-        draggable="true"
         v-for="(grid, index) in scene.grids"
         :key="index"
+        draggable="true"
         :class="
           clsx(
-            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed'
+            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed',
           )
         "
       >

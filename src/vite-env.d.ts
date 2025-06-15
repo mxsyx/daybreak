@@ -21,7 +21,6 @@ interface Size {
   ratio: number
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Dict<T = any> = Record<string, T>
 
 type ReactFC<T = unknown> = React.FC<T & { children: React.ReactNode }>

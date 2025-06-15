@@ -1,4 +1,4 @@
-import Ruler from '@/components/Main/Ruler'
+import Ruler from '@/layout/Main/Ruler'
 import { defineStore } from 'pinia'
 import { shallowRef, type ShallowRef } from 'vue'
 

@@ -2,11 +2,11 @@
 import { useDark } from '@vueuse/core'
 
 import { Toaster } from '@/components/ui/sonner'
-import SceneLine from '@/components/SceneEditor/SceneLine'
-import AssetsExplorer from '@/components/AssetsExplorer'
-import SceneEditor from '@/components/SceneEditor'
-import Menu from '@/components/Menu'
-import Main from '@/components/Main'
+import SceneLine from '@/layout/SceneEditor/SceneLine'
+import AssetsExplorer from '@/layout/AssetsExplorer'
+import SceneEditor from '@/layout/SceneEditor'
+import Menu from '@/layout/Menu'
+import Main from '@/layout/Main'
 
 useDark({
   storageKey: 'color-scheme',

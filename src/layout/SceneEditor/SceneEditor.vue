@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Layers, Music, AudioLines, Image } from 'lucide-vue-next'
-import { Tabs } from '../ui/tabs'
+import { Tabs } from '@/components/ui/tabs'
 import { ref } from 'vue'
-import NavBtn from '../NavBtn'
+import NavBtn from '@/components/NavBtn'
 
 const navs = [
   {
@@ -36,10 +36,10 @@ const activeNav = ref(0)
         v-for="nav in navs"
         :key="nav.label"
         :active="activeNav === navs.indexOf(nav)"
-        @click="activeNav = navs.indexOf(nav)"
         :icon="nav.icon"
         :label="nav.label"
         position="right"
+        @click="activeNav = navs.indexOf(nav)"
       />
     </nav>
   </Tabs>

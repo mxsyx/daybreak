@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Toggle } from '../../ui/toggle'
+import { Toggle } from '@/components/ui/toggle'
 import { Grid3X3 } from 'lucide-vue-next'
 import pixi from '@/pixi'
 
