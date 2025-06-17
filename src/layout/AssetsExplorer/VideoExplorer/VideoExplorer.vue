@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { shallowRef } from 'vue'
-import { handleDragStart } from '../utils'
+// import { shallowRef } from 'vue'
+// import { handleDragStart } from '../utils'
 
-const videoRef = shallowRef<HTMLVideoElement>()
+// const videoRef = shallowRef<HTMLVideoElement>()
 
-const play = () => {
-  videoRef.value!.play()
-}
-const reset = () => {
-  videoRef.value!.pause()
-  videoRef.value!.currentTime = 0
-}
+// const play = () => {
+//   videoRef.value!.play()
+// }
+// const reset = () => {
+//   videoRef.value!.pause()
+//   videoRef.value!.currentTime = 0
+// }
 </script>
 
 <template>
   <div class="flex flex-wrap gap-4">
-    <div
+    <!-- <div
       class="p-1 rounded-xs border border-dashed border-transparent hover:border-white cursor-pointer relative"
       draggable
       @dragstart="
@@ -38,6 +38,6 @@ const reset = () => {
         @mouseover="play"
         @mouseleave="reset"
       />
-    </div>
+    </div> -->
   </div>
 </template>

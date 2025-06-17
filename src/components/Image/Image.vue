@@ -9,8 +9,8 @@ interface Props {
   alt?: string
   width?: number | string
   height?: number | string
-  className?: string
-  rootClassName?: string
+  class?: string
+  rootClass?: string
   onClick?: () => void
 }
 
@@ -75,7 +75,7 @@ onMounted(() => {
 <template>
   <div
     :class="
-      cn('inline-block relative overflow-hidden cursor-pointer', rootClassName)
+      cn('inline-block relative overflow-hidden cursor-pointer', rootClass)
     "
     @click="onClick"
   >
@@ -84,6 +84,7 @@ onMounted(() => {
       :alt="alt"
       :width="width"
       :height="height"
+      :class="props.class"
       @load="isLoading = false"
     />
     <img
@@ -95,9 +96,11 @@ onMounted(() => {
         cn(
           'absolute top-0 left-0 transition-opacity duration-500',
           isLoading ? 'opacity-100' : 'opacity-0',
+          props.class,
         )
       "
       @transitionend="showBlur = false"
     />
+    <slot></slot>
   </div>
 </template>

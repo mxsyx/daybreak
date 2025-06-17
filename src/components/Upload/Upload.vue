@@ -24,9 +24,8 @@ import { encode as encodeWebp } from '@jsquash/webp'
 import Image from '../Image'
 import { ONE_MB } from '@/lib/constants'
 import { getUrl } from '@/lib/request'
-import { Plus } from 'lucide-vue-next'
+import { Plus, LoaderCircle, X } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
-import { LoaderCircle } from 'lucide-vue-next'
 import { cn } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { rgbaToThumbHash } from 'thumbhash'
@@ -36,7 +35,7 @@ interface Props {
   accept?: string
   multiple?: boolean
   maxCount?: number
-  className?: string
+  class?: string
   placeholder?: string
   width?: number
   height?: number
@@ -71,7 +70,6 @@ interface UploadTarget {
 }
 
 const emit = defineEmits<{
-  remove: []
   upload: [url: string, result: UploadResult]
 }>()
 
@@ -81,7 +79,11 @@ const isLoading = ref<boolean>(false)
 const model = defineModel<UploadResult | UploadResult[]>()
 
 const results = computed(() => {
-  return Array.isArray(model.value) ? model.value : [model.value]
+  return Array.isArray(model.value)
+    ? model.value
+    : model.value
+      ? [model.value]
+      : undefined
 })
 
 const isDisabled = computed(() => {
@@ -96,10 +98,9 @@ const handleClick = () => {
   fileInput.value.click()
 }
 
-// const handleRemove = () => {
-//   emit('update:modelValue', undefined)
-//   emit('remove')
-// }
+const handleRemove = () => {
+  model.value = undefined
+}
 
 const readFiles = (files: File[]) => {
   return files.map(
@@ -302,35 +303,39 @@ const handleFileChange = async (e: Event) => {
       @change="handleFileChange"
     />
 
-    <LoaderCircle v-if="isLoading" :class="props.className" />
-    <template v-else>
-      <template v-if="$slots.default">
-        <slot></slot>
-      </template>
-      <template v-else-if="results.length > 0">
-        <Image
-          v-for="result in results"
-          :key="result?.id"
-          :src="result?.url"
-          :width="width"
-          :height="height"
-          :class="cn('object-contain', props.className)"
-        />
-      </template>
-      <Button
-        v-else
-        :class="
-          cn(
-            'border border-dashed rounded-xl gap-2',
-            isDisabled && 'opacity-70 cursor-not-allowed',
-            props.className,
-          )
-        "
-        :style="{ width, height }"
-      >
-        <Plus />
-        <span>{{ placeholder }}</span>
-      </Button>
+    <div v-if="isLoading" :class="cn('flex-center', props.class)">
+      <LoaderCircle class="animate-spin" />
+    </div>
+    <template v-else-if="$slots.default">
+      <slot></slot>
     </template>
+    <template v-else-if="results && results.length > 0">
+      <Image
+        v-for="result in results"
+        :key="result?.id"
+        :src="result?.url"
+        :width="width"
+        :height="height"
+        :class="cn('object-contain', props.class)"
+        root-class="text-center"
+      >
+        <X class="absolute right-1 top-1 size-5" @click.stop="handleRemove" />
+      </Image>
+    </template>
+    <Button
+      v-else
+      variant="outline"
+      :class="
+        cn(
+          'border border-dashed rounded-xl gap-2 hover:bg-transparent hover:border-white',
+          isDisabled && 'opacity-70 cursor-not-allowed',
+          props.class,
+        )
+      "
+      :style="{ width, height }"
+    >
+      <Plus />
+      <span>{{ placeholder }}</span>
+    </Button>
   </div>
 </template>
