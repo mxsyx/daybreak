@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button'
 import { Bot, Box, Folder } from 'lucide-vue-next'
 import { ref } from 'vue'
 import NavBtn from '@/components/NavBtn'
-import VideoExplorer from './VideoExplorer'
 import { Input } from '@/components/ui/input'
 import Contribution from './Contribution.vue'
+import ImageExplorer from './ImageExplorer.vue'
+import VideoExplorer from './VideoExplorer'
 
 // prettier-ignore
 const BUTTON_CLASS = 'w-10 h-6 text-xs bg-alpha-5 text-foreground-1 rounded shadow-none hover:bg-alpha-10'
@@ -64,6 +65,7 @@ const activeNav = ref(0)
       </div>
 
       <div class="px-4 py-2">
+        <!-- <ImageExplorer /> -->
         <VideoExplorer />
       </div>
     </div>

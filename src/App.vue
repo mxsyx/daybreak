@@ -7,6 +7,7 @@ import AssetsExplorer from '@/layout/AssetsExplorer'
 import SceneEditor from '@/layout/SceneEditor'
 import Menu from '@/layout/Menu'
 import Main from '@/layout/Main'
+import TooltipProvider from './components/ui/tooltip/TooltipProvider.vue'
 
 useDark({
   storageKey: 'color-scheme',
@@ -14,13 +15,17 @@ useDark({
 </script>
 
 <template>
-  <Menu></Menu>
-  <div class="grid grid-cols-[2.2fr_6fr_2.2fr] gap-4 overflow-hidden flex-grow">
-    <AssetsExplorer />
-    <Main></Main>
-    <SceneEditor />
-  </div>
-  <SceneLine />
+  <TooltipProvider>
+    <Menu></Menu>
+    <div
+      class="grid grid-cols-[2.2fr_6fr_2.2fr] gap-4 overflow-hidden flex-grow"
+    >
+      <AssetsExplorer />
+      <Main></Main>
+      <SceneEditor />
+    </div>
+    <SceneLine />
+  </TooltipProvider>
 
   <Toaster />
 </template>

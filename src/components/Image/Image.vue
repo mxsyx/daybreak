@@ -37,8 +37,8 @@ const { src, thumbSrc, width, height } = computed(() => {
 
   const params = new URL(src).searchParams
   const thumbhash = params.get('thumbhash')
-  const w = params.get('w') ?? undefined
-  const h = params.get('h') ?? undefined
+  // const w = params.get('w') ?? undefined
+  // const h = params.get('h') ?? undefined
 
   if (thumbhash) {
     const hash = Uint8Array.from(atob(thumbhash), (c) => c.charCodeAt(0))
@@ -47,13 +47,9 @@ const { src, thumbSrc, width, height } = computed(() => {
   }
   if (props.width) {
     srcInfo.width = props.width
-  } else {
-    srcInfo.width = w
   }
   if (props.height) {
     srcInfo.height = props.height
-  } else {
-    srcInfo.height = h
   }
   srcInfo.src = src
 

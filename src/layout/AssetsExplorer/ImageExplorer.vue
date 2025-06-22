@@ -1,29 +1,51 @@
 <script setup lang="ts">
-const handleDragStart = (e: DragEvent) => {
-  console.log(e)
-  return
+import Image from '@/components/Image'
+import { AssetTypeEnum, type Asset } from '@/endpoints/asset'
+import { CDN_URL } from '@/lib/constants'
+import { useEndpoint } from '@/lib/request'
+import { MasonryInfiniteGrid } from '@egjs/vue3-infinitegrid'
+import { onMounted, ref } from 'vue'
+
+const containerRef = ref<HTMLDivElement>()
+const columnSize = ref<number>(0)
+
+const handleDragStart = (e: DragEvent, image: Asset) => {
   e.dataTransfer!.setData(
     'application/json',
     JSON.stringify({
       type: 'image',
-      src: 'https://pub-41194815121a4efe96145ae898daa4ad.r2.dev/01tx.jpg',
-    })
+      src: `${CDN_URL}${image.payload.url}`,
+    }),
   )
 }
+
+const { data: images } = useEndpoint('v1/assets', {
+  method: 'GET',
+  manual: false,
+  params: {
+    type: AssetTypeEnum.IMAGE,
+    page: 1,
+  },
+})
+
+onMounted(() => {
+  const { width } = containerRef.value!.getBoundingClientRect()
+  columnSize.value = Math.floor((width - 16) / 2)
+})
 </script>
 
 <template>
-  <div class="flex flex-wrap gap-4">
-    <div
-      class="p-1 rounded-xs border border-dashed border-transparent hover:border-white cursor-pointer"
-      draggable
-      @dragstart="handleDragStart"
-    >
-      <img
-        src="https://pub-41194815121a4efe96145ae898daa4ad.r2.dev/01tx.jpg"
-        width="200"
-        height="200"
-      />
-    </div>
+  <div ref="containerRef">
+    <MasonryInfiniteGrid v-if="columnSize" class="container" :column="2">
+      <div
+        v-for="(image, index) in images"
+        :key="image.id"
+        :data-grid-groupkey="index % 40"
+        draggable
+        @dragstart="handleDragStart($event, image)"
+      >
+        <Image :src="image.payload.url" :width="columnSize" />
+      </div>
+    </MasonryInfiniteGrid>
   </div>
 </template>

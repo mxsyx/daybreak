@@ -1,13 +1,19 @@
 <script lang="ts">
 const MAX_SIZE = 20 * ONE_MB
+// TODO support more file types
 export const ACCEPT_IMAGE = 'image/jpeg, image/png, image/webp'
+export const ACCEPT_VIDEO = 'video/mp4, video/ogg, video/webm'
+export const ACCEPT_AUDIO = 'audio/mpeg, audio/ogg, audio/aac'
+
 // prettier-ignore
 export const ACCEPT_OFFICE = 'application/pdf, application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, plain/text'
-export const ACCEPT_ALL = `${ACCEPT_IMAGE}, ${ACCEPT_OFFICE}`
+export const ACCEPT_MEDIA = `${ACCEPT_IMAGE}, ${ACCEPT_VIDEO}, ${ACCEPT_AUDIO}`
+export const ACCEPT_ALL = `${ACCEPT_IMAGE},  ${ACCEPT_VIDEO}, ${ACCEPT_OFFICE}`
 
 export interface UploadResult {
   id: string
   key: string
+  type: AssetType
   metadata: { size: string } & {
     type: 'image/webp'
     width: number
@@ -24,11 +30,13 @@ import { encode as encodeWebp } from '@jsquash/webp'
 import Image from '../Image'
 import { ONE_MB } from '@/lib/constants'
 import { getUrl } from '@/lib/request'
-import { Plus, LoaderCircle, X } from 'lucide-vue-next'
+import { LoaderCircle, X, UploadIcon } from 'lucide-vue-next'
 import { toast } from 'vue-sonner'
 import { cn } from '@/lib/utils'
 import { Button } from '../ui/button'
 import { rgbaToThumbHash } from 'thumbhash'
+// import { ffmpeg } from '@/lib/ffmpeg'
+import { AssetTypeEnum, type AssetType } from '@/endpoints/asset'
 
 interface Props {
   maxSize?: number
@@ -45,6 +53,7 @@ interface Props {
   maxHeight?: number
   disabled?: boolean
   formDisabled?: boolean
+  removeable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -59,18 +68,21 @@ const props = withDefaults(defineProps<Props>(), {
   maxHeight: Infinity,
   disabled: false,
   formDisabled: false,
+  removeable: true,
 })
 
 interface UploadTarget {
   file: File
+  type: AssetType
   img?: HTMLImageElement
   buffer?: ArrayBuffer
   width?: number
   height?: number
+  duration?: number
 }
 
 const emit = defineEmits<{
-  upload: [url: string, result: UploadResult]
+  upload: [url: string, result: UploadResult, file: File]
 }>()
 
 const fileInput = ref<HTMLInputElement>()
@@ -105,7 +117,7 @@ const handleRemove = () => {
 const readFiles = (files: File[]) => {
   return files.map(
     (file) =>
-      new Promise((resolve) => {
+      new Promise((resolve, reject) => {
         if (file.type.startsWith('image/')) {
           const reader = new FileReader()
           reader.onload = () => {
@@ -113,6 +125,7 @@ const readFiles = (files: File[]) => {
             const onload = () => {
               resolve({
                 file,
+                type: AssetTypeEnum.IMAGE,
                 img,
                 width: img.naturalWidth,
                 height: img.naturalHeight,
@@ -125,8 +138,25 @@ const readFiles = (files: File[]) => {
             }
           }
           reader.readAsDataURL(file)
-        } else {
-          resolve({ file })
+        } else if (file.type.startsWith('video/')) {
+          file
+            .arrayBuffer()
+            .then((buffer) => {
+              const video = document.createElement('video')
+              video.preload = 'metadata'
+              video.src = URL.createObjectURL(file)
+              video.addEventListener('loadedmetadata', () => {
+                resolve({
+                  file,
+                  type: AssetTypeEnum.VIDEO,
+                  buffer,
+                  width: video.videoWidth,
+                  height: video.videoHeight,
+                  duration: video.duration,
+                })
+              })
+            })
+            .catch(reject)
         }
       }),
   ) as Promise<UploadTarget>[]
@@ -164,35 +194,31 @@ const checkFiles = (targets: UploadTarget[]) => {
   ) as Promise<boolean>[]
 }
 
-const compressFiles = (targets: UploadTarget[]) => {
+const compressImages = (targets: UploadTarget[]) => {
   return targets.map(
     (target) =>
       new Promise((resolve, reject) => {
-        if (target.img) {
-          const canvas = document.createElement('canvas')
-          canvas.width = target.width!
-          canvas.height = target.height!
-          const ctx = canvas.getContext('2d')!
-          ctx.drawImage(target.img, 0, 0)
-          const rawImageData = ctx.getImageData(
-            0,
-            0,
-            target.width!,
-            target.height!,
-          )
-          encodeWebp(rawImageData)
-            .then((buffer) => {
-              if (buffer.byteLength > props.maxSize) {
-                return reject('Image compression failed')
-              }
+        const canvas = document.createElement('canvas')
+        canvas.width = target.width!
+        canvas.height = target.height!
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(target.img!, 0, 0)
+        const rawImageData = ctx.getImageData(
+          0,
+          0,
+          target.width!,
+          target.height!,
+        )
+        encodeWebp(rawImageData)
+          .then((buffer) => {
+            if (buffer.byteLength > props.maxSize) {
+              return reject('Image compression failed')
+            }
 
-              target.buffer = buffer
-              resolve(buffer)
-            })
-            .catch(reject)
-        } else {
-          resolve(null)
-        }
+            target.buffer = buffer
+            resolve(buffer)
+          })
+          .catch(reject)
       }),
   )
 }
@@ -217,23 +243,74 @@ const encodeThumbhash = (target: UploadTarget) => {
   return btoa(String.fromCharCode(...thumb)).replace(/=+$/, '')
 }
 
+// const encodeVideos = (targets: UploadTarget[]) => {
+//   return targets.map(
+//     (target) =>
+//       new Promise((resolve, reject) => {
+//         ffmpeg
+//           .load()
+//           .catch(reject)
+//           .then(() => {
+//             ffmpeg
+//               .writeFile(target.file.name, new Uint8Array(target.buffer!))
+//               .catch(reject)
+//               .then(() => {
+//                 ffmpeg
+//                   .exec([
+//                     '-i',
+//                     target.file.name,
+//                     '-c:v',
+//                     'libx264',
+//                     '-c:a',
+//                     'aac',
+//                     'output.mp4',
+//                   ])
+//                   .catch((error) => {
+//                     console.log(error)
+//                   })
+//                   .then(() => {
+//                     ffmpeg
+//                       .readFile('output.mp4')
+//                       .catch(reject)
+//                       .then((bytes) => {
+//                         target.buffer = (bytes as Uint8Array).buffer
+//                         resolve(target.buffer)
+//                       })
+//                   })
+//               })
+//           })
+//       }),
+//   )
+// }
+
 const uploadFiles = (targets: UploadTarget[]) => {
   return targets.map(
     (target) =>
       new Promise((resolve, reject) => {
         const formData = new FormData()
 
-        if (target.buffer) {
-          const blob = new Blob([target.buffer], { type: 'image/webp' })
-          const thumbhash = encodeThumbhash(target)
-          console.log(thumbhash)
-
+        if (target.type === AssetTypeEnum.IMAGE) {
+          const blob = new Blob([target.buffer!], { type: 'image/webp' })
           formData.append('file', blob)
+
+          const thumbhash = encodeThumbhash(target)
           if (thumbhash) {
             formData.append('thumbhash', thumbhash)
           }
           formData.append('width', String(target.width))
           formData.append('height', String(target.height))
+        } else if (target.type === AssetTypeEnum.VIDEO) {
+          const blob = new Blob([target.buffer!], { type: 'video/mp4' })
+          formData.append('file', blob)
+
+          formData.append('width', '1920')
+          formData.append('height', '1080')
+          formData.append('duration', '200')
+        } else if (target.type === AssetTypeEnum.AUDIO) {
+          const blob = new Blob([target.buffer!], { type: 'audio/mpeg' })
+          formData.append('file', blob)
+
+          formData.append('duration', '200')
         } else {
           formData.append('file', target.file)
         }
@@ -246,7 +323,7 @@ const uploadFiles = (targets: UploadTarget[]) => {
             const result = (await response.json()) as UploadResult
             const url = URL.createObjectURL(target.file)
             result.url = url
-            emit('upload', url, result)
+            emit('upload', url, result, target.file)
             resolve(result)
           })
           .catch((error) => {
@@ -256,23 +333,22 @@ const uploadFiles = (targets: UploadTarget[]) => {
   ) as Promise<UploadResult>[]
 }
 
-const handleFileChange = async (e: Event) => {
-  const { files } = e.target as HTMLInputElement
-  if (!files || files.length === 0) {
-    return
-  }
-
-  if (files.length > props.maxCount) {
-    toast.error(`最多上传 ${props.maxCount} 张图片`)
-    return
-  }
-
+const processFiles = async (files: File[]) => {
   try {
     isLoading.value = true
 
     const targets = await Promise.all(readFiles(Array.from(files)))
     await Promise.all(checkFiles(targets))
-    await Promise.all(compressFiles(targets))
+    await Promise.all(
+      compressImages(
+        targets.filter((target) => target.type === AssetTypeEnum.IMAGE),
+      ),
+    )
+    // await Promise.all(
+    //   encodeVideos(
+    //     targets.filter((target) => target.type === AssetTypeEnum.VIDEO),
+    //   ),
+    // )
 
     const promises = uploadFiles(targets)
     const values: UploadResult[] = []
@@ -289,10 +365,27 @@ const handleFileChange = async (e: Event) => {
     isLoading.value = false
   }
 }
+defineExpose({
+  processFiles,
+})
+
+const handleFileChange = async (e: Event) => {
+  const { files } = e.target as HTMLInputElement
+  if (!files || files.length === 0) {
+    return
+  }
+
+  if (files.length > props.maxCount) {
+    toast.error(`最多上传 ${props.maxCount} 个文件`)
+    return
+  }
+
+  processFiles(Array.from(files))
+}
 </script>
 
 <template>
-  <div class="cursor-pointer leading-0" @click="handleClick">
+  <div class="cursor-pointer leading-0 w-max" @click="handleClick">
     <input
       ref="fileInput"
       type="file"
@@ -310,17 +403,32 @@ const handleFileChange = async (e: Event) => {
       <slot></slot>
     </template>
     <template v-else-if="results && results.length > 0">
-      <Image
-        v-for="result in results"
-        :key="result?.id"
-        :src="result?.url"
-        :width="width"
-        :height="height"
-        :class="cn('object-contain', props.class)"
-        root-class="text-center"
-      >
-        <X class="absolute right-1 top-1 size-5" @click.stop="handleRemove" />
-      </Image>
+      <div v-for="result in results" :key="result?.id" class="relative">
+        <Image
+          v-if="result.type === AssetTypeEnum.IMAGE"
+          :src="result?.url"
+          :width="width"
+          :height="height"
+          :class="cn('object-contain', props.class)"
+          root-class="text-center"
+        >
+        </Image>
+        <video
+          v-else-if="result.type === AssetTypeEnum.VIDEO"
+          :src="result.url"
+          :class="cn('object-contain', props.class)"
+          controls
+        ></video>
+        <audio
+          v-else-if="result.type === AssetTypeEnum.AUDIO"
+          :src="result.url"
+        ></audio>
+        <X
+          v-if="removeable"
+          class="absolute right-1 top-1 size-5"
+          @click.stop="handleRemove"
+        />
+      </div>
     </template>
     <Button
       v-else
@@ -334,7 +442,7 @@ const handleFileChange = async (e: Event) => {
       "
       :style="{ width, height }"
     >
-      <Plus />
+      <UploadIcon />
       <span>{{ placeholder }}</span>
     </Button>
   </div>

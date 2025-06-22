@@ -2,6 +2,16 @@
   "version": 1.1,
   "atDirectives": [
     {
+      "name": "@tailwind",
+      "description": "Use the @tailwind directive to insert Tailwind’s base, components, utilities and variants styles into your CSS.",
+      "references": [
+        {
+          "name": "Tailwind Documentation",
+          "url": "https://v3.tailwindcss.com/docs/functions-and-directives#tailwind"
+        }
+      ]
+    },
+    {
       "name": "@import",
       "description": "Use the @import directive to inline import CSS files, including Tailwind itself.",
       "references": [

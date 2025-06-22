@@ -20,6 +20,6 @@ export default defineConfig({
     sourcemap: true,
   },
   optimizeDeps: {
-    exclude: ['@jsquash/webp', 'jieba-wasm'],
+    exclude: ['@jsquash/webp', 'jieba-wasm', '@ffmpeg/ffmpeg'],
   },
 })

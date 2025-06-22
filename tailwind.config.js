@@ -124,6 +124,11 @@ export default {
           alignItems: 'center',
           justifyContent: 'center',
         },
+        '.flex-between': {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        },
         '.mask': {
           position: 'absolute',
           left: 0,

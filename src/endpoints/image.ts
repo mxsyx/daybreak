@@ -10,4 +10,15 @@ export interface ImageEndpoints {
       }
     }
   }
+  'v1/images': {
+    POST: {
+      payload: {
+        key: string
+        caption: string
+        tags: string[]
+      }
+      params: {}
+      data: {}
+    }
+  }
 }
