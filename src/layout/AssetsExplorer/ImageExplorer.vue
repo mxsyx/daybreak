@@ -35,17 +35,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef">
-    <MasonryInfiniteGrid v-if="columnSize" class="container" :column="2">
-      <div
-        v-for="(image, index) in images"
-        :key="image.id"
-        :data-grid-groupkey="index % 40"
-        draggable
-        @dragstart="handleDragStart($event, image)"
-      >
-        <Image :src="image.payload.url" :width="columnSize" />
-      </div>
-    </MasonryInfiniteGrid>
+  <div class="px-4 py-2">
+    <div ref="containerRef">
+      <MasonryInfiniteGrid v-if="columnSize" class="container" :column="2">
+        <div
+          v-for="(image, index) in images"
+          :key="image.id"
+          :data-grid-groupkey="index % 40"
+          draggable
+          @dragstart="handleDragStart($event, image)"
+        >
+          <Image :src="image.payload.url" :width="columnSize" />
+        </div>
+      </MasonryInfiniteGrid>
+    </div>
   </div>
 </template>

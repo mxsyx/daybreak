@@ -129,6 +129,11 @@ export default {
           alignItems: 'center',
           justifyContent: 'space-between',
         },
+        '.flex-start': {
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+        },
         '.mask': {
           position: 'absolute',
           left: 0,

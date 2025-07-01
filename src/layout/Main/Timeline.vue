@@ -16,7 +16,7 @@ const scene = computed(() => sceneStore.scene)
         draggable="true"
         :class="
           clsx(
-            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed',
+            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed text-base',
           )
         "
       >

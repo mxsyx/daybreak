@@ -7,9 +7,7 @@ import { Input } from '@/components/ui/input'
 import Contribution from './Contribution.vue'
 import ImageExplorer from './ImageExplorer.vue'
 import VideoExplorer from './VideoExplorer'
-
-// prettier-ignore
-const BUTTON_CLASS = 'w-10 h-6 text-xs bg-alpha-5 text-foreground-1 rounded shadow-none hover:bg-alpha-10'
+import AudioExplorer from './AudioExplorer/AudioExplorer.vue'
 
 const navs = [
   {
@@ -26,7 +24,32 @@ const navs = [
   },
 ]
 
+const tabs = [
+  {
+    label: '图片',
+  },
+  {
+    label: '视频',
+  },
+  {
+    label: '音乐',
+  },
+  {
+    label: '贴纸',
+  },
+  {
+    label: '形状',
+  },
+  {
+    label: '音效',
+  },
+  {
+    label: '文字',
+  },
+]
+
 const activeNav = ref(0)
+const activeTab = ref(0)
 </script>
 
 <template>
@@ -54,19 +77,24 @@ const activeNav = ref(0)
           <Contribution />
         </div>
         <div class="flex gap-2 border-b sticky top-0 bg-surface-2 py-2">
-          <Button :class="BUTTON_CLASS">图片</Button>
-          <Button :class="BUTTON_CLASS">贴纸</Button>
-          <Button :class="BUTTON_CLASS">形状</Button>
-          <Button :class="BUTTON_CLASS">视频</Button>
-          <Button :class="BUTTON_CLASS">音乐</Button>
-          <Button :class="BUTTON_CLASS">音效</Button>
-          <Button :class="BUTTON_CLASS">文字</Button>
+          <Button
+            v-for="(tab, index) in tabs"
+            :key="tab.label"
+            class="w-10 h-6 text-xs bg-alpha-5 text-foreground-1 rounded shadow-none hover:bg-alpha-10"
+            @click="activeTab = index"
+          >
+            {{ tab.label }}
+          </Button>
         </div>
       </div>
 
-      <div class="px-4 py-2">
-        <!-- <ImageExplorer /> -->
+      <div
+        class="w-[700%] grid grid-cols-7 transition-all duration-300"
+        :style="{ transform: `translateX(-${(activeTab / 7) * 100}%)` }"
+      >
+        <ImageExplorer />
         <VideoExplorer />
+        <AudioExplorer />
       </div>
     </div>
   </aside>

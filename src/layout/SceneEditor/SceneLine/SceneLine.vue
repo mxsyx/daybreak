@@ -33,7 +33,7 @@ const grids = ref<TextGrid[]>(
     start: grid[0] as number,
     end: grid[1] as number,
     text: grid[2] as string,
-  }))
+  })),
 )
 const startGridIndex = ref<number>()
 const boxes = ref<(TextGrid | Scene)[]>(grids.value)
@@ -76,7 +76,7 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
       boxes.value.splice(
         startGridIndex.value,
         index - startGridIndex.value + 1,
-        newScene
+        newScene,
       )
       startGridIndex.value = undefined
     }
@@ -99,14 +99,14 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
         :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
         :class="
           clsx(
-            'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed',
+            'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed text-base',
             {
               'hover:bg-[#892fff] hover:text-white': box.type === 'grid',
               'bg-[#892fff]': startGridIndex === index,
               'mx-1 rounded-[4px] bg-surface-2 !border-solid text-foreground-1':
                 box.type === 'scene',
               '!bg-[#892fff] text-white': box === activeScene,
-            }
+            },
           )
         "
         @click="handleClick(box, index)"

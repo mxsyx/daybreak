@@ -13,7 +13,7 @@ import {
 import Upload from '../../components/Upload'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
-import { ACCEPT_MEDIA, type UploadResult } from '@/components/Upload/Upload.vue'
+import { ACCEPT_MEDIA, type UploadResult } from '@/components/Upload'
 import { ref } from 'vue'
 import { useEndpoint } from '@/lib/request'
 import TooltipX from '@/components/ui/tooltip/TooltipX.vue'
@@ -69,6 +69,17 @@ const { run: createVideoAsset, loading: videoCreating } = useEndpoint(
   },
 )
 
+const { run: createAudioAsset, loading: audioCreating } = useEndpoint(
+  'v1/audios',
+  {
+    method: 'POST',
+    onSuccess: () => {
+      toast.success('成功提交资源')
+      open.value = false
+    },
+  },
+)
+
 const handleUpload = (_: string, result: UploadResult, file: File) => {
   if (result.type === AssetTypeEnum.VIDEO) {
     const video = document.createElement('video')
@@ -109,6 +120,12 @@ const handleSubmit = () => {
       createVideoAsset({
         key: uploadResult.value.key,
         posterKey: posterUploadResult.value!.key,
+        caption: caption.value,
+        tags: tags.value,
+      })
+    } else if (uploadResult.value.type === AssetTypeEnum.AUDIO) {
+      createAudioAsset({
+        key: uploadResult.value.key,
         caption: caption.value,
         tags: tags.value,
       })
@@ -181,7 +198,7 @@ const handleSubmit = () => {
         <DialogFooter>
           <Button
             :disabled="!uploadResult || !caption"
-            :loading="videoCreating"
+            :loading="imageCreating || videoCreating || audioCreating"
             @click="handleSubmit"
           >
             提交
