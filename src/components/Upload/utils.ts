@@ -17,23 +17,25 @@ export interface UploadResult {
   id: string
   key: string
   type: AssetType
-  metadata: { size: string } & {
-    type: 'image/webp'
+  metadata: {
     width: number
     height: number
     thumbhash: string
+    waveform?: string
   }
   url: string
 }
 
-export interface UploadTarget {
+export type UploadTarget = {
   file: File
   type: AssetType
   img?: HTMLImageElement
   buffer?: ArrayBuffer
+  thumbhash?: string
   width?: number
   height?: number
   duration?: number
+  waveform?: number[]
 }
 
 export interface UploadProps {
@@ -139,19 +141,31 @@ const checkFiles = (targets: UploadTarget[], props: UploadProps) => {
       new Promise((resolve, reject) => {
         if (target.img) {
           const messages: string[] = []
-          if (target.img.width < props.minWidth!) {
+          if (
+            props.minWidth !== undefined &&
+            target.img.width < props.minWidth
+          ) {
             messages.push(
               `The width of ${target.file.name} must be greater than ${props.minWidth} pixels`,
             )
-          } else if (target.img.height < props.minHeight!) {
+          } else if (
+            props.minHeight !== undefined &&
+            target.img.height < props.minHeight
+          ) {
             messages.push(
               `The height of ${target.file.name} must be greater than ${props.minHeight} pixels`,
             )
-          } else if (target.img.width > props.maxWidth!) {
+          } else if (
+            props.maxWidth !== undefined &&
+            target.img.width > props.maxWidth
+          ) {
             messages.push(
               `The width of ${target.file.name} must be less than ${props.maxWidth} pixels`,
             )
-          } else if (target.img.height > props.maxHeight!) {
+          } else if (
+            props.maxHeight !== undefined &&
+            target.img.height > props.maxHeight
+          ) {
             messages.push(
               `The height of ${target.file.name} must be less than ${props.maxHeight} pixels`,
             )
@@ -193,7 +207,10 @@ const compressImages = (targets: UploadTarget[], props: UploadProps) => {
         )
         encodeWebp(rawImageData)
           .then((buffer) => {
-            if (buffer.byteLength > props.maxSize!) {
+            if (
+              props.maxSize !== undefined &&
+              buffer.byteLength > props.maxSize
+            ) {
               return reject('Image compression failed')
             }
 
@@ -215,24 +232,61 @@ const compressImages = (targets: UploadTarget[], props: UploadProps) => {
  * It then converts the raw image data to a thumbnail hash using rgbaToThumbHash.
  * The resulting thumbnail hash is encoded in Base64 and returned.
  */
-const encodeThumbhash = (target: UploadTarget) => {
-  const { img, width, height } = target
-  if (!img || !width || !height) {
-    return
-  }
+const encodeThumbhash = (targets: UploadTarget[]) => {
+  targets.forEach((target) => {
+    const { img, width, height } = target
+    if (!img || !width || !height) {
+      return
+    }
 
-  const size = Math.max(width, height)
-  const w = (img.width = Math.round((100 * width) / size))
-  const h = (img.height = Math.round((100 * height) / size))
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')!
-  canvas.width = w
-  canvas.height = h
-  ctx.drawImage(img, 0, 0, w, h)
-  const pixels = ctx.getImageData(0, 0, w, h)
+    const size = Math.max(width, height)
+    const w = (img.width = Math.round((100 * width) / size))
+    const h = (img.height = Math.round((100 * height) / size))
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    canvas.width = w
+    canvas.height = h
+    ctx.drawImage(img, 0, 0, w, h)
+    const pixels = ctx.getImageData(0, 0, w, h)
 
-  const thumb = rgbaToThumbHash(w, h, pixels.data)
-  return btoa(String.fromCharCode(...thumb)).replace(/=+$/, '')
+    const thumb = rgbaToThumbHash(w, h, pixels.data)
+    target.thumbhash = btoa(String.fromCharCode(...thumb)).replace(/=+$/, '')
+  })
+}
+
+const encodeWaveform = (targets: UploadTarget[]) => {
+  return targets.map(
+    (target) =>
+      new Promise(async (resolve, reject) => {
+        try {
+          const audioCtx = new AudioContext()
+          const buffer = await target.file.arrayBuffer()
+          const audioBuffer = await audioCtx.decodeAudioData(buffer)
+
+          const rawData = audioBuffer.getChannelData(1)
+          const samples = 1000
+          const blockSize = Math.floor(rawData.length / samples)
+          const filteredData = []
+
+          for (let i = 0; i < samples; i++) {
+            const blockStart = i * blockSize
+            let sum = 0
+            for (let j = 0; j < blockSize; j++) {
+              sum += Math.abs(rawData[blockStart + j])
+            }
+            filteredData.push(sum / blockSize)
+          }
+
+          // Normalize
+          const max = Math.max(...filteredData)
+          const normalizedData = filteredData.map((n) => n / max)
+          target.waveform = normalizedData
+          resolve(normalizedData)
+        } catch (error) {
+          reject(error)
+        }
+      }),
+  ) as Promise<number[]>[]
 }
 
 /**
@@ -251,7 +305,7 @@ const encodeThumbhash = (target: UploadTarget) => {
  * The function also emits an 'upload' event for each file that is uploaded,
  * passing the file's URL and other metadata as arguments.
  */
-const uploadFiles = (targets: UploadTarget[], emit: UploadEmit) => {
+const uploadFiles = (targets: UploadTarget[], emit?: UploadEmit) => {
   return targets.map(
     (target) =>
       new Promise((resolve, reject) => {
@@ -261,12 +315,11 @@ const uploadFiles = (targets: UploadTarget[], emit: UploadEmit) => {
           const blob = new Blob([target.buffer!], { type: 'image/webp' })
           formData.append('file', blob)
 
-          const thumbhash = encodeThumbhash(target)
-          if (thumbhash) {
-            formData.append('thumbhash', thumbhash)
-          }
           formData.append('width', String(target.width))
           formData.append('height', String(target.height))
+          if (target.thumbhash) {
+            formData.append('thumbhash', target.thumbhash)
+          }
         } else if (target.type === AssetTypeEnum.VIDEO) {
           const blob = new Blob([target.file], { type: 'video/mp4' })
           formData.append('file', blob)
@@ -279,6 +332,9 @@ const uploadFiles = (targets: UploadTarget[], emit: UploadEmit) => {
           formData.append('file', blob)
 
           formData.append('duration', '200')
+          if (target.waveform) {
+            formData.append('waveform', JSON.stringify(target.waveform))
+          }
         } else {
           formData.append('file', target.file)
         }
@@ -291,7 +347,7 @@ const uploadFiles = (targets: UploadTarget[], emit: UploadEmit) => {
             const result = (await response.json()) as UploadResult
             const url = URL.createObjectURL(target.file)
             result.url = url
-            emit('upload', url, result, target.file)
+            emit?.('upload', url, result, target.file)
             resolve(result)
           })
           .catch((error) => {
@@ -325,7 +381,7 @@ const uploadFiles = (targets: UploadTarget[], emit: UploadEmit) => {
 export const processFiles = async (
   files: File[],
   props: UploadProps,
-  emit: UploadEmit,
+  emit?: UploadEmit,
 ) => {
   const targets = await Promise.all(readFiles(Array.from(files)))
   await Promise.all(checkFiles(targets, props))
@@ -335,11 +391,19 @@ export const processFiles = async (
       props,
     ),
   )
+  encodeThumbhash(
+    targets.filter((target) => target.type === AssetTypeEnum.IMAGE),
+  )
   // await Promise.all(
   //   encodeVideos(
   //     targets.filter((target) => target.type === AssetTypeEnum.VIDEO),
   //   ),
   // )
+  await Promise.all(
+    encodeWaveform(
+      targets.filter((target) => target.type === AssetTypeEnum.AUDIO),
+    ),
+  )
 
   const promises = uploadFiles(targets, emit)
   const values: UploadResult[] = []

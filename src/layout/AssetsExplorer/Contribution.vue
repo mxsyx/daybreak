@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import Upload from '../../components/Upload'
+import Upload, { processFiles } from '../../components/Upload'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { ACCEPT_MEDIA, type UploadResult } from '@/components/Upload'
@@ -21,20 +21,19 @@ import { TagsInputX } from '@/components/ui/tags-input'
 import { toast } from 'vue-sonner'
 import { AssetTypeEnum } from '@/endpoints/asset'
 import { cn } from '@/lib/utils'
+import Image from '@/components/Image'
+import Waveform from '@/components/Waveform'
 
 const uploadResult = ref<UploadResult | undefined>(undefined)
 const posterUploadResult = ref<UploadResult | undefined>(undefined)
 const caption = ref<string | undefined>(undefined)
 const tags = ref<string[]>([])
 const open = ref(false)
-const isShowPoster = ref(false)
-const posterUploadRef = ref<InstanceType<typeof Upload> | null>(null)
 
 const resetValues = () => {
   uploadResult.value = undefined
   caption.value = undefined
   tags.value = []
-  isShowPoster.value = false
 }
 
 const { run: generateImageCaption, loading: generating } = useEndpoint(
@@ -96,16 +95,22 @@ const handleUpload = (_: string, result: UploadResult, file: File) => {
       video.addEventListener('seeked', () => {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
         canvas.toBlob((blob) => {
-          isShowPoster.value = true
           if (blob) {
-            posterUploadRef.value!.processFiles([
-              new File([blob], 'poster.png', { type: 'image/png' }),
-            ])
+            processFiles(
+              [new File([blob], 'poster.png', { type: 'image/png' })],
+              {},
+              (_, __, result) => {
+                console.log(result)
+
+                posterUploadResult.value = result
+              },
+            )
           }
         }, 'image/png')
       })
     })
   }
+  uploadResult.value = result
 }
 
 const handleSubmit = () => {
@@ -160,13 +165,24 @@ const handleSubmit = () => {
           @upload="handleUpload"
         />
 
-        <div :class="cn('hidden', isShowPoster && 'block')">
+        <div v-if="posterUploadResult">
           <Label>封面</Label>
-          <Upload
-            ref="posterUploadRef"
-            v-model="posterUploadResult"
-            class="size-40"
+          <Image
+            :src="posterUploadResult?.url"
+            root-class="block"
+            class="w-40 mt-3"
           />
+        </div>
+
+        <div
+          v-if="
+            uploadResult &&
+            uploadResult.type === AssetTypeEnum.AUDIO &&
+            uploadResult.metadata.waveform
+          "
+        >
+          <Label>波形图</Label>
+          <Waveform :data="JSON.parse(uploadResult.metadata.waveform)" />
         </div>
 
         <!-- Description -->

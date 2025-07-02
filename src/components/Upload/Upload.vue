@@ -10,11 +10,12 @@ import { ONE_MB } from '@/lib/constants'
 import { toast } from 'vue-sonner'
 import { cn } from '@/lib/utils'
 import { AssetTypeEnum } from '@/endpoints/asset'
-
-const MAX_SIZE = 20 * ONE_MB
+import { LoaderCircle, UploadIcon, X } from 'lucide-vue-next'
+import Image from '../Image'
+import { Button } from '../ui/button'
 
 const props = withDefaults(defineProps<UploadProps>(), {
-  maxSize: MAX_SIZE,
+  maxSize: 20 * ONE_MB,
   accept: ACCEPT_IMAGE,
   multiple: false,
   maxCount: 1,

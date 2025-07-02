@@ -26,6 +26,7 @@ const { src, thumbSrc, width, height } = computed(() => {
     width?: string | number
     height?: string | number
   } = {}
+  console.log(props, 1)
 
   let src = props.src
   if (src && src.startsWith('/')) {
