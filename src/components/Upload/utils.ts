@@ -21,7 +21,7 @@ export interface UploadResult {
     width: number
     height: number
     thumbhash: string
-    waveform?: string
+    waveform?: number[]
   }
   url: string
 }
@@ -347,6 +347,11 @@ const uploadFiles = (targets: UploadTarget[], emit?: UploadEmit) => {
             const result = (await response.json()) as UploadResult
             const url = URL.createObjectURL(target.file)
             result.url = url
+
+            if (target.type === AssetTypeEnum.AUDIO) {
+              result.metadata.waveform = target.waveform
+            }
+
             emit?.('upload', url, result, target.file)
             resolve(result)
           })

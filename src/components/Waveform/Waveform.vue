@@ -5,6 +5,8 @@ const canvasRef = ref<HTMLCanvasElement>()
 
 const props = defineProps<{
   data: number[]
+  width: number
+  height: number
 }>()
 
 onMounted(() => {
@@ -23,5 +25,5 @@ onMounted(() => {
 })
 </script>
 <template>
-  <canvas ref="canvasRef" width="1000" height="200"></canvas>
+  <canvas ref="canvasRef" :width="props.width" :height="props.height"></canvas>
 </template>

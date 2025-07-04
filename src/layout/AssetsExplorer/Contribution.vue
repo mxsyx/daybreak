@@ -20,7 +20,6 @@ import TooltipX from '@/components/ui/tooltip/TooltipX.vue'
 import { TagsInputX } from '@/components/ui/tags-input'
 import { toast } from 'vue-sonner'
 import { AssetTypeEnum } from '@/endpoints/asset'
-import { cn } from '@/lib/utils'
 import Image from '@/components/Image'
 import Waveform from '@/components/Waveform'
 
@@ -182,7 +181,11 @@ const handleSubmit = () => {
           "
         >
           <Label>波形图</Label>
-          <Waveform :data="JSON.parse(uploadResult.metadata.waveform)" />
+          <Waveform
+            :data="uploadResult.metadata.waveform"
+            :width="300"
+            :height="150"
+          />
         </div>
 
         <!-- Description -->
