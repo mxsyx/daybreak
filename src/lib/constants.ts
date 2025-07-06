@@ -1,4 +1,4 @@
-export const CDN_URL = 'https://files.mxsyx.site'
+export const CDN_URL = import.meta.env.VITE_CDN_URL
 
 export const PRIMARY_COLOR = 0x892eff
 

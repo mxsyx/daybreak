@@ -26,7 +26,6 @@ const { src, thumbSrc, width, height } = computed(() => {
     width?: string | number
     height?: string | number
   } = {}
-  console.log(props, 1)
 
   let src = props.src
   if (src && src.startsWith('/')) {
@@ -36,10 +35,11 @@ const { src, thumbSrc, width, height } = computed(() => {
     return srcInfo
   }
 
-  const params = new URL(src).searchParams
-  const thumbhash = params.get('thumbhash')
-  // const w = params.get('w') ?? undefined
-  // const h = params.get('h') ?? undefined
+  const url = new URL(src)
+  const thumbhash = url.searchParams.get('thumbhash')
+  // const w = searchParams.get('w') ?? undefined
+  // const h = searchParams.get('h') ?? undefined
+  url.search = ''
 
   if (thumbhash) {
     const hash = Uint8Array.from(atob(thumbhash), (c) => c.charCodeAt(0))
@@ -52,7 +52,7 @@ const { src, thumbSrc, width, height } = computed(() => {
   if (props.height) {
     srcInfo.height = props.height
   }
-  srcInfo.src = src
+  srcInfo.src = url.href
 
   return srcInfo
 }).value

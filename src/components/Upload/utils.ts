@@ -5,8 +5,8 @@ import { AssetTypeEnum, type AssetType } from '@/endpoints/asset'
 
 // TODO support more file types
 export const ACCEPT_IMAGE = 'image/jpeg, image/png, image/webp'
-export const ACCEPT_VIDEO = 'video/mp4, video/ogg, video/webm'
-export const ACCEPT_AUDIO = 'audio/mpeg, audio/ogg, audio/aac'
+export const ACCEPT_VIDEO = 'video/mp4'
+export const ACCEPT_AUDIO = 'audio/mpeg, audio/x-m4a'
 
 // prettier-ignore
 export const ACCEPT_OFFICE = 'application/pdf, application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, plain/text'
@@ -264,7 +264,7 @@ const encodeWaveform = (targets: UploadTarget[]) => {
           const audioBuffer = await audioCtx.decodeAudioData(buffer)
 
           const rawData = audioBuffer.getChannelData(1)
-          const samples = 1000
+          const samples = Math.max(Math.floor(audioBuffer.duration) * 10, 1000)
           const blockSize = Math.floor(rawData.length / samples)
           const filteredData = []
 
@@ -331,7 +331,7 @@ const uploadFiles = (targets: UploadTarget[], emit?: UploadEmit) => {
           const blob = new Blob([target.file], { type: 'audio/mpeg' })
           formData.append('file', blob)
 
-          formData.append('duration', '200')
+          formData.append('duration', String(target.duration))
           if (target.waveform) {
             formData.append('waveform', JSON.stringify(target.waveform))
           }
@@ -345,7 +345,15 @@ const uploadFiles = (targets: UploadTarget[], emit?: UploadEmit) => {
         })
           .then(async (response) => {
             const result = (await response.json()) as UploadResult
-            const url = URL.createObjectURL(target.file)
+            let url = URL.createObjectURL(target.file)
+            const searchParams = new URLSearchParams(window.location.search)
+            for (const [key, value] of formData.entries()) {
+              if (key === 'file' || key === 'waveform') {
+                continue
+              }
+              searchParams.set(key, value.toString())
+            }
+            url += `?${searchParams.toString()}`
             result.url = url
 
             if (target.type === AssetTypeEnum.AUDIO) {

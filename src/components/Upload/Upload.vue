@@ -13,6 +13,8 @@ import { AssetTypeEnum } from '@/endpoints/asset'
 import { LoaderCircle, UploadIcon, X } from 'lucide-vue-next'
 import Image from '../Image'
 import { Button } from '../ui/button'
+import Waveform from '../Audio'
+import Video from '../Video'
 
 const props = withDefaults(defineProps<UploadProps>(), {
   maxSize: 20 * ONE_MB,
@@ -115,17 +117,20 @@ const handleFileChange = async (e: Event) => {
           root-class="text-center"
         >
         </Image>
-        <video
+        <Video
           v-else-if="result.type === AssetTypeEnum.VIDEO"
           :src="result.url"
           :class="cn('object-contain', props.class)"
           controls
-        ></video>
-        <audio
-          v-else-if="result.type === AssetTypeEnum.AUDIO"
+        ></Video>
+        <Waveform
+          v-else-if="
+            result.type === AssetTypeEnum.AUDIO && result.metadata.waveform
+          "
           :src="result.url"
-          controls
-        ></audio>
+          :data="result.metadata.waveform"
+          :class="cn('h-24', props.class)"
+        />
         <X
           v-if="removeable"
           class="absolute right-1 top-1 size-5"

@@ -21,7 +21,6 @@ import { TagsInputX } from '@/components/ui/tags-input'
 import { toast } from 'vue-sonner'
 import { AssetTypeEnum } from '@/endpoints/asset'
 import Image from '@/components/Image'
-import Waveform from '@/components/Waveform'
 
 const uploadResult = ref<UploadResult | undefined>(undefined)
 const posterUploadResult = ref<UploadResult | undefined>(undefined)
@@ -99,8 +98,6 @@ const handleUpload = (_: string, result: UploadResult, file: File) => {
               [new File([blob], 'poster.png', { type: 'image/png' })],
               {},
               (_, __, result) => {
-                console.log(result)
-
                 posterUploadResult.value = result
               },
             )
@@ -159,7 +156,7 @@ const handleSubmit = () => {
         <Label>资源</Label>
         <Upload
           v-model="uploadResult"
-          class="size-40"
+          :class="uploadResult ? 'w-80' : 'size-40'"
           :accept="ACCEPT_MEDIA"
           @upload="handleUpload"
         />
@@ -170,21 +167,6 @@ const handleSubmit = () => {
             :src="posterUploadResult?.url"
             root-class="block"
             class="w-40 mt-3"
-          />
-        </div>
-
-        <div
-          v-if="
-            uploadResult &&
-            uploadResult.type === AssetTypeEnum.AUDIO &&
-            uploadResult.metadata.waveform
-          "
-        >
-          <Label>波形图</Label>
-          <Waveform
-            :data="uploadResult.metadata.waveform"
-            :width="300"
-            :height="150"
           />
         </div>
 

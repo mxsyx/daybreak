@@ -18,12 +18,13 @@ const { data: audios } = useEndpoint('v1/assets', {
 
 <template>
   <div class="px-4 py-2">
-    <div ref="containerRef">
+    <div ref="containerRef" class="flex flex-col gap-4">
       <Audio
         v-for="audio in audios"
         :key="audio.id"
         :src="audio.payload.url"
         :caption="audio.payload.caption"
+        :waveform-url="audio.payload.waveformUrl"
       >
       </Audio>
     </div>

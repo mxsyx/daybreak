@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import 'vue-click-to-component/client'
 
 import App from './App.vue'
 import { initPixi } from './pixi'

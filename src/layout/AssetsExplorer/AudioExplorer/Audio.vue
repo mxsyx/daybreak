@@ -1,34 +1,56 @@
 <script setup lang="ts">
 import { CDN_URL } from '@/lib/constants'
-import { computed, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { handleDragStart } from '../utils'
-import { Play, PlayCircle } from 'lucide-vue-next'
-import { Slider } from '@/components/ui/slider'
+import { Pause, Play } from 'lucide-vue-next'
+import type { AudioRef } from '@/components/Audio'
+import Audio from '@/components/Audio'
 
 const props = defineProps<{
   src: string
   caption: string
+  waveformUrl?: string
 }>()
 
-const currentTime = ref([33])
+const waveform = ref<number[]>()
+const AudioRef = ref<AudioRef>()
+const isPlaying = ref<boolean>(false)
 
-const { src, duration } = computed(() => {
-  const src = `${CDN_URL}${props.src}`
-  const duration = new URL(src).searchParams.get('duration')
-  return { src, duration: parseFloat(duration ?? '0') }
-}).value
+onMounted(() => {
+  if (props.waveformUrl) {
+    fetch(`${CDN_URL}${props.waveformUrl}`)
+      .then((res) => res.json())
+      .then((data) => {
+        waveform.value = data
+      })
+  }
+})
 </script>
 
 <template>
-  <!-- TODO Spectrum -->
   <div
     class="flex flex-col gap-2 border rounded-lg px-3 py-2 bg-surface-1 cursor-pointer"
     draggable
     @dragstart="handleDragStart($event, 'audio', src)"
   >
     {{ caption }}
-    <div class="flex-start">
-      <Play class="size-5 hover:fill-white" />
+    <div class="flex-start gap-2">
+      <Play
+        v-if="!isPlaying"
+        class="size-5 hover:fill-white"
+        @click="AudioRef?.play"
+      />
+      <Pause v-else class="size-5 hover:fill-white" @click="AudioRef?.reset" />
+
+      <Audio
+        v-if="waveform"
+        ref="AudioRef"
+        :src="src"
+        :waveform="waveform"
+        class="grow h-10"
+        @play="isPlaying = true"
+        @pause="isPlaying = false"
+      ></Audio>
     </div>
   </div>
 </template>

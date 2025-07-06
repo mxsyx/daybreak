@@ -29,7 +29,8 @@ export interface Asset {
     caption: string
     tags: string[]
     type: number
-    poster: string
+    poster?: string
+    waveformUrl?: string
   }
 }
 
