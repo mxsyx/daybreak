@@ -5,8 +5,6 @@ const props = defineProps<{
 }>()
 
 const handleDragStart = (e: DragEvent) => {
-  console.log(e)
-
   e.dataTransfer?.setData('application/json', JSON.stringify(props))
 }
 </script>

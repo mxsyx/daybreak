@@ -18,7 +18,7 @@ useDark({
   <TooltipProvider>
     <Menu></Menu>
     <div
-      class="grid grid-cols-[2.2fr_6fr_2.2fr] gap-4 overflow-hidden flex-grow"
+      class="grid grid-cols-[auto_7.5fr_2.5fr] gap-4 overflow-hidden flex-grow"
     >
       <AssetsExplorer />
       <Main></Main>

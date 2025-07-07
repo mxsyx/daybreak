@@ -21,6 +21,7 @@ import { TagsInputX } from '@/components/ui/tags-input'
 import { toast } from 'vue-sonner'
 import { AssetTypeEnum } from '@/endpoints/asset'
 import Image from '@/components/Image'
+import useRefreshKeysStore from '@/store/refreshKeys'
 
 const uploadResult = ref<UploadResult | undefined>(undefined)
 const posterUploadResult = ref<UploadResult | undefined>(undefined)
@@ -33,6 +34,8 @@ const resetValues = () => {
   caption.value = undefined
   tags.value = []
 }
+
+const refreshKeysStore = useRefreshKeysStore()
 
 const { run: generateImageCaption, loading: generating } = useEndpoint(
   'v1/image/captions',
@@ -51,6 +54,7 @@ const { run: createImageAsset, loading: imageCreating } = useEndpoint(
     onSuccess: () => {
       toast.success('成功提交资源')
       open.value = false
+      refreshKeysStore.refreshImages()
     },
   },
 )
@@ -62,6 +66,7 @@ const { run: createVideoAsset, loading: videoCreating } = useEndpoint(
     onSuccess: () => {
       toast.success('成功提交资源')
       open.value = false
+      refreshKeysStore.refreshVideos()
     },
   },
 )
@@ -70,9 +75,11 @@ const { run: createAudioAsset, loading: audioCreating } = useEndpoint(
   'v1/audios',
   {
     method: 'POST',
+    refreshDeps: [ref(refreshKeysStore.audios)],
     onSuccess: () => {
       toast.success('成功提交资源')
       open.value = false
+      refreshKeysStore.refreshAudios()
     },
   },
 )

@@ -53,7 +53,7 @@ const activeTab = ref(0)
 </script>
 
 <template>
-  <aside class="flex">
+  <aside class="flex overflow-y-hidden">
     <nav class="flex flex-col px-2 gap-1">
       <NavBtn
         v-for="nav in navs"
@@ -66,7 +66,7 @@ const activeTab = ref(0)
       />
     </nav>
     <div
-      class="bg-surface-2 border-[1px] border-stroke rounded-xl overflow-auto"
+      class="bg-surface-2 border-[1px] border-stroke rounded-xl flex flex-col w-[360px]"
     >
       <div class="p-4">
         <div class="flex-center gap-2">
@@ -89,7 +89,7 @@ const activeTab = ref(0)
       </div>
 
       <div
-        class="w-[700%] grid grid-cols-7 transition-all duration-300"
+        class="w-[700%] overflow-y-auto grid grid-cols-7 transition-all duration-300"
         :style="{ transform: `translateX(-${(activeTab / 7) * 100}%)` }"
       >
         <ImageExplorer />

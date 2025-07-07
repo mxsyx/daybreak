@@ -3,7 +3,9 @@ import Image from '@/components/Image'
 import { AssetTypeEnum, type Asset } from '@/endpoints/asset'
 import { CDN_URL } from '@/lib/constants'
 import { useEndpoint } from '@/lib/request'
+import useRefreshKeysStore from '@/store/refreshKeys'
 import { MasonryInfiniteGrid } from '@egjs/vue3-infinitegrid'
+import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
 
 const containerRef = ref<HTMLDivElement>()
@@ -19,6 +21,8 @@ const handleDragStart = (e: DragEvent, image: Asset) => {
   )
 }
 
+const refreshKeysStore = useRefreshKeysStore()
+
 const { data: images } = useEndpoint('v1/assets', {
   method: 'GET',
   manual: false,
@@ -26,6 +30,7 @@ const { data: images } = useEndpoint('v1/assets', {
     type: AssetTypeEnum.IMAGE,
     page: 1,
   },
+  refreshDeps: [storeToRefs(refreshKeysStore).images],
 })
 
 onMounted(() => {
