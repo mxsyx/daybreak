@@ -27,7 +27,7 @@ const activeNav = ref(0)
 </script>
 
 <template>
-  <Tabs default-value="account" as="aside" class="flex">
+  <Tabs default-value="account" as="aside" class="flex flex-row">
     <div
       class="bg-surface-2 rounded-xl border-[1px] border-stroke overflow-auto flex-grow"
     ></div>

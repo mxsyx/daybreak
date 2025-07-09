@@ -66,9 +66,9 @@ const activeTab = ref(0)
       />
     </nav>
     <div
-      class="bg-surface-2 border-[1px] border-stroke rounded-xl flex flex-col w-[360px]"
+      class="bg-surface-2 border-[1px] border-stroke rounded-xl flex flex-col w-90"
     >
-      <div class="p-4">
+      <div class="p-4 pb-2">
         <div class="flex-center gap-2">
           <Input
             class="border border-gray-background-3 rounded bg-background-1 !shadow-none"
@@ -89,12 +89,12 @@ const activeTab = ref(0)
       </div>
 
       <div
-        class="w-[700%] overflow-y-auto grid grid-cols-7 transition-all duration-300"
+        class="w-[700%] overflow-y-auto pb-4 grid grid-cols-7 transition-all duration-300"
         :style="{ transform: `translateX(-${(activeTab / 7) * 100}%)` }"
       >
-        <ImageExplorer />
+        <!-- <ImageExplorer />
         <VideoExplorer />
-        <AudioExplorer />
+        <AudioExplorer /> -->
       </div>
     </div>
   </aside>
