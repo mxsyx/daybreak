@@ -53,7 +53,7 @@ const activeTab = ref(0)
 </script>
 
 <template>
-  <aside class="flex overflow-y-hidden">
+  <aside class="flex overflow-y-hidden shrink-0">
     <nav class="flex flex-col px-2 gap-1">
       <NavBtn
         v-for="nav in navs"
@@ -92,9 +92,9 @@ const activeTab = ref(0)
         class="w-[700%] overflow-y-auto pb-4 grid grid-cols-7 transition-all duration-300"
         :style="{ transform: `translateX(-${(activeTab / 7) * 100}%)` }"
       >
-        <!-- <ImageExplorer />
+        <ImageExplorer />
         <VideoExplorer />
-        <AudioExplorer /> -->
+        <AudioExplorer />
       </div>
     </div>
   </aside>

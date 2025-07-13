@@ -89,30 +89,28 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 </script>
 
 <template>
-  <footer class="px-4">
-    <div
-      class="flex flex-nowrap bg-surface-1 text-foreground-1 p-3 border-[1px] border-stroke rounded-xl overflow-x-scroll"
+  <div
+    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-scroll"
+  >
+    <span
+      v-for="(box, index) in boxes"
+      :key="index"
+      :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
+      :class="
+        clsx(
+          'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed text-base',
+          {
+            'hover:bg-[#892fff] hover:text-white': box.type === 'grid',
+            'bg-[#892fff]': startGridIndex === index,
+            'mx-1 rounded-[4px] bg-surface-2 !border-solid text-foreground-1':
+              box.type === 'scene',
+            '!bg-[#892fff] text-white': box === activeScene,
+          },
+        )
+      "
+      @click="handleClick(box, index)"
     >
-      <span
-        v-for="(box, index) in boxes"
-        :key="index"
-        :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
-        :class="
-          clsx(
-            'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed text-base',
-            {
-              'hover:bg-[#892fff] hover:text-white': box.type === 'grid',
-              'bg-[#892fff]': startGridIndex === index,
-              'mx-1 rounded-[4px] bg-surface-2 !border-solid text-foreground-1':
-                box.type === 'scene',
-              '!bg-[#892fff] text-white': box === activeScene,
-            },
-          )
-        "
-        @click="handleClick(box, index)"
-      >
-        {{ box.text }}
-      </span>
-    </div>
-  </footer>
+      {{ box.text }}
+    </span>
+  </div>
 </template>

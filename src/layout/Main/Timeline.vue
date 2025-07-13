@@ -8,20 +8,18 @@ const scene = computed(() => sceneStore.scene)
 </script>
 
 <template>
-  <div v-if="scene" class="mt-2">
-    <div>
-      <span
-        v-for="(grid, index) in scene.grids"
-        :key="index"
-        draggable="true"
-        :class="
-          clsx(
-            'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed text-base',
-          )
-        "
-      >
-        {{ grid.text }}
-      </span>
-    </div>
+  <div v-if="scene">
+    <span
+      v-for="(grid, index) in scene.grids"
+      :key="index"
+      draggable="true"
+      :class="
+        clsx(
+          'inline-block whitespace-nowrap cursor-pointer p-1 border border-dashed text-base leading-[22px]',
+        )
+      "
+    >
+      {{ grid.text }}
+    </span>
   </div>
 </template>

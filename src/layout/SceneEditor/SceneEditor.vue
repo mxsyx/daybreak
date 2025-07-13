@@ -29,7 +29,7 @@ const activeNav = ref(0)
 <template>
   <Tabs default-value="account" as="aside" class="flex flex-row">
     <div
-      class="bg-surface-2 rounded-xl border-[1px] border-stroke overflow-auto flex-grow"
+      class="bg-surface-2 rounded-xl border-[1px] border-stroke overflow-auto grow"
     ></div>
     <nav class="flex flex-col px-2 gap-1">
       <NavBtn

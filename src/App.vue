@@ -2,7 +2,6 @@
 import { useDark } from '@vueuse/core'
 
 import { Toaster } from '@/components/ui/sonner'
-import SceneLine from '@/layout/SceneEditor/SceneLine'
 import AssetsExplorer from '@/layout/AssetsExplorer'
 import SceneEditor from '@/layout/SceneEditor'
 import Menu from '@/layout/Menu'
@@ -17,14 +16,11 @@ useDark({
 <template>
   <TooltipProvider>
     <Menu></Menu>
-    <div
-      class="grid grid-cols-[auto_7.5fr_2.5fr] gap-4 overflow-hidden flex-grow"
-    >
+    <div class="flex gap-4 overflow-hidden grow mt-4">
       <AssetsExplorer />
       <Main></Main>
       <SceneEditor />
     </div>
-    <SceneLine />
   </TooltipProvider>
 
   <Toaster />

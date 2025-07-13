@@ -6,11 +6,50 @@ import pixi, { pixiOuter } from '@/pixi'
 import { ref, onMounted } from 'vue'
 import { Assets } from 'pixi.js'
 import ISprite from './ISprite'
+import SceneLine from '../SceneEditor/SceneLine'
 
-const container = ref<HTMLDivElement>()
+const containerRef = ref<HTMLDivElement>()
+const canvasInited = ref<boolean>(false)
+
+/**
+ * Resizes the pixi canvas to fit the container.
+ * @param {number} containerWidth - The width of the container.
+ * @param {number} containerHeight - The height of the container.
+ */
+const handleResize = (containerWidth: number, containerHeight: number) => {
+  const ratio = pixiOuter.canvas.width / pixiOuter.canvas.height
+  const pixiOuterWidth = Math.floor(containerHeight * ratio)
+  pixiOuter.canvas.style.height = `${containerHeight}px`
+  pixiOuter.canvas.style.width = `${pixiOuterWidth}px`
+  pixiOuter.canvas.style.left = `${Math.floor((containerWidth - pixiOuterWidth) / 2)}px`
+  pixiOuter.canvas.style.top = `0px`
+  pixiOuter.canvas.className = 'absolute '
+
+  const pixiWidth = Math.floor(containerHeight * ratio * 0.9)
+  const pixiHeight = Math.floor(containerHeight * 0.9)
+  pixi.canvas.style.width = `${pixiWidth}px`
+  pixi.canvas.style.height = `${pixiHeight}px`
+  pixi.canvas.style.left = `${Math.floor((containerWidth - pixiWidth) / 2)}px`
+  pixi.canvas.style.top = `${Math.floor((containerHeight - pixiHeight) / 2)}px`
+  pixi.canvas.className = 'absolute z-10 rounded'
+
+  if (!canvasInited.value) {
+    containerRef.value!.appendChild(pixiOuter.canvas)
+    containerRef.value!.appendChild(pixi.canvas)
+    canvasInited.value = true
+  }
+}
+
 onMounted(() => {
-  container.value!.appendChild(pixiOuter.canvas)
-  container.value!.appendChild(pixi.canvas)
+  const observer = new ResizeObserver(([entry]) => {
+    handleResize(entry.contentRect.width, entry.contentRect.height)
+  })
+  observer.observe(containerRef.value!)
+
+  window.addEventListener('resize', () => {
+    const rect = containerRef.value!.getBoundingClientRect()
+    handleResize(rect.width, rect.height)
+  })
 })
 
 const handleDrop = async (e: DragEvent) => {
@@ -35,11 +74,11 @@ const handleDragOver = (e: DragEvent) => {
 
 <template>
   <main
-    class="grid grid-rows-[auto_1fr] gap-4 bg-surface-1 border-[1px] border-stroke p-3 rounded-xl"
+    class="flex flex-col gap-4 bg-surface-1 border border-stroke p-3 rounded-xl overflow-x-hidden"
   >
     <div
-      ref="container"
-      class="relative"
+      ref="containerRef"
+      class="relative grow"
       @dragover="handleDragOver($event)"
       @drop="handleDrop($event)"
     ></div>
@@ -62,5 +101,6 @@ const handleDragOver = (e: DragEvent) => {
       </div>
     </div>
     <Timeline />
+    <SceneLine />
   </main>
 </template>
