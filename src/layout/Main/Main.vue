@@ -82,9 +82,10 @@ const handleDragOver = (e: DragEvent) => {
       @dragover="handleDragOver($event)"
       @drop="handleDrop($event)"
     ></div>
+    <Timeline />
+
     <div>
-      <hr class="mt-4 mb-2" />
-      <div class="flex justify-between items-center">
+      <div class="flex-between pt-4 border-t">
         <div class="flex items-center gap-2 center">
           <Undo2 :size="20" class="text-foreground-5" />
           <Redo2 :size="20" class="text-foreground-5" />
@@ -100,7 +101,6 @@ const handleDragOver = (e: DragEvent) => {
         </div>
       </div>
     </div>
-    <Timeline />
     <SceneLine />
   </main>
 </template>

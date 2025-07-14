@@ -90,15 +90,15 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 
 <template>
   <div
-    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-scroll"
+    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-scroll pb-2"
   >
-    <span
+    <div
       v-for="(box, index) in boxes"
       :key="index"
       :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
       :class="
         clsx(
-          'inline-block whitespace-nowrap cursor-pointer px-2 py-1 border border-dashed text-base',
+          'w-18 h-12 shrink-0 cursor-pointer px-2 py-1 border border-dashed text-base',
           {
             'hover:bg-[#892fff] hover:text-white': box.type === 'grid',
             'bg-[#892fff]': startGridIndex === index,
@@ -108,9 +108,6 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
           },
         )
       "
-      @click="handleClick(box, index)"
-    >
-      {{ box.text }}
-    </span>
+    ></div>
   </div>
 </template>

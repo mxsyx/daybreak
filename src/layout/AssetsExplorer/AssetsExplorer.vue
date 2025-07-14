@@ -53,7 +53,7 @@ const activeTab = ref(0)
 </script>
 
 <template>
-  <aside class="flex overflow-y-hidden shrink-0">
+  <aside class="flex overflow-x-hidden shrink-0">
     <nav class="flex flex-col px-2 gap-1">
       <NavBtn
         v-for="nav in navs"

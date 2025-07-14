@@ -215,9 +215,6 @@
   .lucide {
     @apply cursor-pointer;
   }
-  ::-webkit-scrollbar {
-    display: none;
-  }
 }
 
 @utility mask {
@@ -246,4 +243,14 @@
 
 @utility bg-full {
   @apply bg-[100%_100%];
+}
+
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+::-webkit-scrollbar-track {
+  @apply bg-stroke rounded-full;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-stroke rounded-full;
 }
