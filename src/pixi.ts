@@ -13,7 +13,7 @@ export async function initPixi(width = 1920, height = 1080) {
     width: width * 1.1,
     height: height * 1.1,
     antialias: true,
-    background: 'hsl(240 15.49% 13.92%)',
+    background: '#050e17',
   })
 
   if (import.meta.env.DEV) {

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useSceneStore } from '@/store'
-import clsx from 'clsx'
-import { Dot } from 'lucide-vue-next'
 
 const sceneStore = useSceneStore()
 const scene = computed(() => sceneStore.scene)
@@ -15,37 +13,26 @@ for (let i = 0; i < 30; i += 0.5) {
   duration += 30
   moments.value.push(i)
 }
-
-console.log(scene.value?.grids)
 </script>
 
 <template>
-  <div v-if="scene">
-    <!-- <div class="flex-start gap-3">
-      <span
-        v-for="(moment, index) in moments"
-        :key="index"
-        class="text-xs font-medium text-muted-foreground"
-      >
-        <template v-if="index % 4 === 0">{{ moment }}</template>
-        <template v-else><Dot /></template>
-      </span>
-    </div> -->
-    <span
+  <div
+    v-if="scene"
+    class="relative border-2 border-[#475569] rounded-lg h-20 max-w-max flex font-medium overflow-hidden"
+  >
+    <div
       v-for="(grid, index) in scene.grids"
       :key="index"
+      class="bg-[#1e293b80] cursor-pointer px-3 flex flex-col justify-center relative"
       draggable="true"
-      :class="
-        clsx(
-          'inline-block whitespace-nowrap cursor-pointer p-1 text-base leading-[22px]',
-        )
-      "
     >
-      {{ grid.text }}
-    </span>
-    <div class="relative">
-      <div class="size-3 rounded-full bg-white"></div>
-      <div class=""></div>
+      <span class="whitespace-nowrap">
+        {{ grid.text }}
+      </span>
+      <span class="absolute top-[2px] right-1 text-xs text-muted-foreground">
+        {{ grid.start }}
+      </span>
+      <div class="absolute w-px h-full right-0 bg-border"></div>
     </div>
   </div>
 </template>
