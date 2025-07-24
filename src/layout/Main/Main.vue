@@ -2,14 +2,18 @@
 import { Redo2, Undo2 } from 'lucide-vue-next'
 import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
-import pixi, { pixiOuter } from '@/pixi'
+import pixi, { eventEmitter, pixiOuter } from '@/pixi'
 import { ref, onMounted } from 'vue'
-import { Assets } from 'pixi.js'
+import { Assets, Texture } from 'pixi.js'
 import ISprite from './ISprite'
 import SceneLine from '../SceneEditor/SceneLine'
+import { useSizeStore } from '@/store'
+import { onClickOutside } from '@vueuse/core'
 
 const containerRef = ref<HTMLDivElement>()
 const canvasInited = ref<boolean>(false)
+
+const { size } = useSizeStore()
 
 /**
  * Resizes the pixi canvas to fit the container.
@@ -37,6 +41,15 @@ const handleResize = (containerWidth: number, containerHeight: number) => {
     containerRef.value!.appendChild(pixiOuter.canvas)
     containerRef.value!.appendChild(pixi.canvas)
     canvasInited.value = true
+
+    const deselectAll = () => {
+      eventEmitter.emit('deselect')
+    }
+
+    pixi.stage.eventMode = 'static'
+    pixi.stage.hitArea = pixi.screen
+    pixi.stage.on('pointerdown', deselectAll)
+    onClickOutside(pixi.canvas, deselectAll)
   }
 }
 
@@ -56,13 +69,26 @@ const handleDrop = async (e: DragEvent) => {
   e.preventDefault()
   const data = JSON.parse(e.dataTransfer!.getData('application/json'))
 
-  const texture = await Assets.load(`${data.src}?v=1`)
+  const url = new URL(data.src)
+  url.searchParams.append('t', Date.now().toString())
+  const texture = await Assets.load<Texture>(url.href)
+  const origRatio = texture.orig.width / texture.orig.height
+  console.log(e.target, e.currentTarget)
 
   const sprite = new ISprite(texture)
-  sprite.width = 360
-  sprite.height = 360
-  sprite.x = 960
-  sprite.y = 120
+  if (texture.orig.width > size.width) {
+    sprite.width = size.width
+    sprite.height = sprite.width / origRatio
+  }
+  if (texture.orig.height > size.height) {
+    sprite.height = size.height
+    sprite.width = sprite.height * origRatio
+  }
+
+  const { left, top, width } = pixi.canvas.getBoundingClientRect()
+  const styleRatio = size.width / width
+  sprite.x = (e.clientX - left) * styleRatio
+  sprite.y = (e.clientY - top) * styleRatio
 
   pixi.stage.addChild(sprite)
 }

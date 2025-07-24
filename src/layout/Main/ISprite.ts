@@ -10,11 +10,17 @@ class ISprite extends Sprite {
   constructor(options?: SpriteOptions | Texture) {
     super(options)
 
+    this.initEventListeners()
+  }
+
+  initEventListeners() {
     this.eventMode = 'static'
 
-    this.on('mousedown', (e) => {
+    this.on('pointerdown', (e) => {
       if (!this.#isSelected) {
+        eventEmitter.emit('deselect')
         this.#isSelected = true
+
         const control = new Control(this, e)
         const { ruler } = useRulerStore()
         control
@@ -29,6 +35,14 @@ class ISprite extends Sprite {
             }
           })
         this.#control = control
+      }
+    })
+
+    eventEmitter.on('deselect', () => {
+      if (this.#isSelected) {
+        this.#isSelected = false
+        this.#control?.destroy()
+        this.#control = null
       }
     })
 

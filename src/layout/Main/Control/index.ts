@@ -139,7 +139,7 @@ class Control extends EventEmitter {
     this.#createEdgeAnchors()
     this.#createRotationAnchor()
 
-    this.#container.emit('mousedown', initialEvent)
+    this.#container.emit('pointerdown', initialEvent)
   }
 
   /**
@@ -168,7 +168,7 @@ class Control extends EventEmitter {
     this.#container = container
 
     container
-      .on('mousedown', (e) => {
+      .on('pointerdown', (e) => {
         this.#beforeTransform(e, 'translate')
       })
       .on('mousemove', (e) => {
@@ -216,7 +216,7 @@ class Control extends EventEmitter {
     const mask = new Graphics({
       eventMode: 'static',
     })
-      .on('mousedown', (e) => {
+      .on('pointerdown', (e) => {
         this.#beforeTransform(e, 'translateOuter')
       })
       .on('mousemove', (e) => {
@@ -253,7 +253,7 @@ class Control extends EventEmitter {
         .circle(0, 0, 10)
         .fill(0xffffff)
 
-      anchor.on('mousedown', (e) => {
+      anchor.on('pointerdown', (e) => {
         this.#beforeResize(e, i, RESIZE_CORNER_TRANSFORM_MODES[i])
       })
 
@@ -273,14 +273,14 @@ class Control extends EventEmitter {
           -4,
           -4,
           i % 2 === 0 ? 16 : 36,
-          i % 2 === 0 ? 36 : 16
+          i % 2 === 0 ? 36 : 16,
         ),
         cursor: i % 2 === 0 ? 'ew-resize' : 'ns-resize',
       })
         .roundRect(0, 0, i % 2 === 0 ? 8 : 28, i % 2 === 0 ? 28 : 8, 15)
         .fill(0xffffff)
         .stroke({ width: 1, color: 0x333333 })
-        .on('mousedown', (e) => {
+        .on('pointerdown', (e) => {
           this.#beforeResize(e, i, RESIZE_EDGE_TRANSFORM_MODES[i])
         })
       this.#container.addChild(anchor)
@@ -299,7 +299,7 @@ class Control extends EventEmitter {
         cursor: 'grab',
         width: 36,
         height: 36,
-      }).on('mousedown', (e) => {
+      }).on('pointerdown', (e) => {
         this.#beforeRotation(e)
       })
       this.#container.addChild(sprite)
@@ -337,7 +337,7 @@ class Control extends EventEmitter {
   #beforeResize(
     e: FederatedPointerEvent,
     i: number,
-    transformMode: TransformMode
+    transformMode: TransformMode,
   ) {
     this.#beforeTransform(e, transformMode)
     this.#resizePivotPoint = this.#cornerAnchors[(i + 2) % 4]
@@ -361,13 +361,13 @@ class Control extends EventEmitter {
     // Calculate the center of the rectangle.
     this.#startPoint = new Point(
       this.#pivotPoint!.x + halfWidth * cosTheta - halfHeight * sinTheta,
-      this.#pivotPoint!.y + halfWidth * sinTheta + halfHeight * cosTheta
+      this.#pivotPoint!.y + halfWidth * sinTheta + halfHeight * cosTheta,
     )
 
     // Calculate the pivot point before rotation.
     this.#pivotPoint = new Point(
       this.#pivotPoint!.x - halfWidth * (1 - cosTheta) - halfHeight * sinTheta,
-      this.#pivotPoint!.y + halfWidth * sinTheta - halfHeight * (1 - cosTheta)
+      this.#pivotPoint!.y + halfWidth * sinTheta - halfHeight * (1 - cosTheta),
     )
   }
 
@@ -432,7 +432,7 @@ class Control extends EventEmitter {
       | {
           x?: number
           y?: number
-        }
+        },
   ) {
     if (typeof data === 'number') {
       const r = Math.sqrt(2)
@@ -443,7 +443,7 @@ class Control extends EventEmitter {
       this.#handleTranslate(
         x - this.#pivotPoint!.x,
         y - this.#pivotPoint!.y,
-        false
+        false,
       )
     }
   }
@@ -501,7 +501,7 @@ class Control extends EventEmitter {
     x3: number,
     y3: number,
     deltaX: number,
-    deltaY: number
+    deltaY: number,
   ) {
     const sign = this.#sign(x3 - x1, y3 - y1, deltaX, deltaY)
     const d = this.#project(deltaX, deltaY, x3 - x0, y3 - y0)
@@ -539,7 +539,7 @@ class Control extends EventEmitter {
     y3: number,
     deltaX: number,
     deltaY: number,
-    i: AnchorIndex
+    i: AnchorIndex,
   ) {
     const sign = this.#sign(x3 - x0, y3 - y0, deltaX, deltaY)
     const d = this.#project(deltaX, deltaY, x1 - x0, y1 - y0)
@@ -565,7 +565,7 @@ class Control extends EventEmitter {
     const anchors = this.#cornerAnchors
 
     const i = (RESIZE_TRANSFORM_MODES.indexOf(
-      this.#transformMode as ResizeTransformMode
+      this.#transformMode as ResizeTransformMode,
     ) % 4) as AnchorIndex
 
     const { x: x0, y: y0 } = anchors[i].getGlobalPosition()
@@ -576,10 +576,10 @@ class Control extends EventEmitter {
     let height: number
     if (RESIZE_CORNER_TRANSFORM_MODES.includes(this.#transformMode! as any)) {
       // prettier-ignore
-      [width, height] = this.#calcNewSizeByCorner(x0,y0,x1,y1,x3,y3, deltaX, deltaY)
+      ;[width, height] = this.#calcNewSizeByCorner(x0,y0,x1,y1,x3,y3, deltaX, deltaY)
     } else {
       // prettier-ignore
-      [width, height] = this.#calcNewSizeByEdge(x0,y0,x1,y1,x3,y3, deltaX, deltaY, i)
+      ;[width, height] = this.#calcNewSizeByEdge(x0,y0,x1,y1,x3,y3, deltaX, deltaY, i)
     }
 
     this.#obj.setSize(width, height)
@@ -596,9 +596,9 @@ class Control extends EventEmitter {
     this.#emitTransformEvent(
       ANCHOR_DIRECTIONS[
         RESIZE_TRANSFORM_MODES.indexOf(
-          this.#transformMode as ResizeTransformMode
+          this.#transformMode as ResizeTransformMode,
         )
-      ]
+      ],
     )
   }
 
@@ -626,7 +626,7 @@ class Control extends EventEmitter {
         // prettier-ignore
         this.#pivotPoint!.x + halfWidth * (1 - cosTheta) + halfHeight * sinTheta,
         // prettier-ignore
-        this.#pivotPoint!.y - halfWidth * sinTheta + halfHeight * (1 - cosTheta)
+        this.#pivotPoint!.y - halfWidth * sinTheta + halfHeight * (1 - cosTheta),
       )
       .copyTo(this.#obj.position)
     this.#syncOuterMaskPosition()
@@ -700,7 +700,7 @@ class Control extends EventEmitter {
         -STROKE_WIDTH / 2,
         -STROKE_WIDTH / 2,
         width + STROKE_WIDTH,
-        height + STROKE_WIDTH
+        height + STROKE_WIDTH,
       )
       .fill('transparent')
       .stroke({ width: STROKE_WIDTH, color: PRIMARY_COLOR })
@@ -710,7 +710,7 @@ class Control extends EventEmitter {
     this.#cornerAnchors.forEach((anchor, i) => {
       anchor.position.set(
         i === 0 || i === 3 ? 0 : width,
-        i === 0 || i === 1 ? 0 : height
+        i === 0 || i === 1 ? 0 : height,
       )
     })
 
@@ -719,7 +719,7 @@ class Control extends EventEmitter {
         // prettier-ignore
         (i === 0 ? 0 : i === 2 ? 1 : 0.5) * width + (i === 0 ? -6 : i === 2 ? -2 : -14),
         // prettier-ignore
-        (i === 1 ? 0 : i === 3 ? 1 : 0.5) * height + (i === 1 ? -6 : i === 3 ? -2 : -14)
+        (i === 1 ? 0 : i === 3 ? 1 : 0.5) * height + (i === 1 ? -6 : i === 3 ? -2 : -14),
       )
     })
 
