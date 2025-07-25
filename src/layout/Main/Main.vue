@@ -3,17 +3,20 @@ import { Redo2, Undo2 } from 'lucide-vue-next'
 import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
 import pixi, { eventEmitter, pixiOuter } from '@/pixi'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed, watchEffect, watch } from 'vue'
 import { Assets, Texture } from 'pixi.js'
 import ISprite from './ISprite'
 import SceneLine from '../SceneEditor/SceneLine'
-import { useSizeStore } from '@/store'
+import { useSceneStore, useSizeStore } from '@/store'
 import { onClickOutside } from '@vueuse/core'
+import type { TransferData } from '../AssetsExplorer/utils'
 
 const containerRef = ref<HTMLDivElement>()
 const canvasInited = ref<boolean>(false)
 
 const { size } = useSizeStore()
+const sceneStore = useSceneStore()
+const scene = computed(() => sceneStore.scene).value
 
 /**
  * Resizes the pixi canvas to fit the container.
@@ -67,13 +70,14 @@ onMounted(() => {
 
 const handleDrop = async (e: DragEvent) => {
   e.preventDefault()
-  const data = JSON.parse(e.dataTransfer!.getData('application/json'))
+  const data = JSON.parse(
+    e.dataTransfer!.getData('application/json'),
+  ) as TransferData
 
   const url = new URL(data.src)
   url.searchParams.append('t', Date.now().toString())
   const texture = await Assets.load<Texture>(url.href)
   const origRatio = texture.orig.width / texture.orig.height
-  console.log(e.target, e.currentTarget)
 
   const sprite = new ISprite(texture)
   if (texture.orig.width > size.width) {
@@ -89,6 +93,21 @@ const handleDrop = async (e: DragEvent) => {
   const styleRatio = size.width / width
   sprite.x = (e.clientX - left) * styleRatio
   sprite.y = (e.clientY - top) * styleRatio
+  sprite.x = sprite.x - sprite.width * data.pointerPercentX
+  sprite.y = sprite.y - sprite.height * data.pointerPercentY
+
+  if (scene) {
+    // sceneStore.addObject({
+    //   x: sprite.x,
+    //   y: sprite.y,
+    //   width: sprite.width,
+    //   height: sprite.height,
+    //   range: [0, scene.grids.length],
+    //   type: AssetTypeEnum.IMAGE,
+    //   src: data.src,
+    // })
+    console.log(1)
+  }
 
   pixi.stage.addChild(sprite)
 }

@@ -39,5 +39,3 @@ export const AssetTypeEnum = {
   VIDEO: 2,
   AUDIO: 3,
 } as const
-
-export type AssetType = (typeof AssetTypeEnum)[keyof typeof AssetTypeEnum]

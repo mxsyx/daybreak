@@ -1,5 +1,9 @@
 /// <reference types="vite/client" />
 
+type Dict<T = any> = Record<string, T>
+
+type ReactFC<T = unknown> = React.FC<T & { children: React.ReactNode }>
+
 interface TextGrid {
   type: 'grid'
   start: number
@@ -12,7 +16,7 @@ interface Scene {
   type: 'scene'
   text: string
   grids: TextGrid[]
-  layout: Layout
+  objects: SceneObject[]
 }
 
 interface Size {
@@ -21,34 +25,19 @@ interface Size {
   ratio: number
 }
 
-type Dict<T = any> = Record<string, T>
+type AssetType = 1 | 2 | 3
 
-type ReactFC<T = unknown> = React.FC<T & { children: React.ReactNode }>
-
-interface Window {
-  encodeWebp: (data: ImageData) => Promise<ArrayBuffer>
-}
-
-interface Layout {
-  type: 'layout'
-  rows: number
-  cols: number
-  blocks: Block[]
-}
-
-interface Block {
-  type: 'block'
-  object?: SceneObject
-}
-
-interface Image {
-  type: 'image'
+interface BaseObject {
+  x: number
+  y: number
+  width: number
+  height: number
+  range: [number, number]
+  type: AssetType
   src: string
 }
 
-type SceneObject = Layout | Block | Image
-
-type Asset = Layout
+type SceneObject = BaseObject
 
 interface Vector {
   x: number

@@ -1,25 +1,15 @@
 <script setup lang="ts">
 import Image from '@/components/Image'
-import { AssetTypeEnum, type Asset } from '@/endpoints/asset'
-import { CDN_URL } from '@/lib/constants'
+import { AssetTypeEnum } from '@/endpoints/asset'
 import { useEndpoint } from '@/lib/request'
 import useRefreshKeysStore from '@/store/refreshKeys'
 import { MasonryInfiniteGrid } from '@egjs/vue3-infinitegrid'
 import { storeToRefs } from 'pinia'
 import { onMounted, ref } from 'vue'
+import { handleDragStart } from './utils'
 
 const containerRef = ref<HTMLDivElement>()
 const columnSize = ref<number>(0)
-
-const handleDragStart = (e: DragEvent, image: Asset) => {
-  e.dataTransfer!.setData(
-    'application/json',
-    JSON.stringify({
-      type: 'image',
-      src: `${CDN_URL}${image.payload.url}`,
-    }),
-  )
-}
 
 const refreshKeysStore = useRefreshKeysStore()
 
@@ -48,7 +38,9 @@ onMounted(() => {
           :key="image.id"
           :data-grid-groupkey="index % 40"
           draggable
-          @dragstart="handleDragStart($event, image)"
+          @dragstart="
+            handleDragStart($event, AssetTypeEnum.IMAGE, image.payload.url)
+          "
         >
           <Image :src="image.payload.url" :width="columnSize" />
         </div>

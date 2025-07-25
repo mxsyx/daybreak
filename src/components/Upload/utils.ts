@@ -1,7 +1,7 @@
 import { encode as encodeWebp } from '@jsquash/webp'
 import { getUrl } from '@/lib/request'
 import { rgbaToThumbHash } from 'thumbhash'
-import { AssetTypeEnum, type AssetType } from '@/endpoints/asset'
+import { AssetTypeEnum } from '@/endpoints/asset'
 
 // TODO support more file types
 export const ACCEPT_IMAGE = 'image/jpeg, image/png, image/webp'
