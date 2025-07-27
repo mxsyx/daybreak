@@ -14,7 +14,6 @@ interface TextGrid {
 
 interface Scene {
   type: 'scene'
-  text: string
   grids: TextGrid[]
   objects: SceneObject[]
 }
@@ -35,6 +34,7 @@ interface BaseObject {
   range: [number, number]
   type: AssetType
   src: string
+  id: number
 }
 
 type SceneObject = BaseObject

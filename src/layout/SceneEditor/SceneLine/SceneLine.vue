@@ -2,31 +2,10 @@
 import { ref, onMounted } from 'vue'
 import clsx from 'clsx'
 import data from '@/test/data.json'
-import { useSceneStore } from '@/store'
+import { useEditingStore } from '@/store'
 
-// 定义类型
-type TextGrid = {
-  type: 'grid'
-  start: number
-  end: number
-  text: string
-}
+const editingStore = useEditingStore()
 
-type Scene = {
-  type: 'scene'
-  text: string
-  grids: TextGrid[]
-  layout: {
-    rows: number
-    cols: number
-    blocks: Array<{ pl: number; pt: number; pr: number; pb: number }>
-  }
-}
-
-// 使用 Pinia store
-const sceneStore = useSceneStore()
-
-// 状态
 const grids = ref<TextGrid[]>(
   data.tiers.words.entries.map((grid) => ({
     type: 'grid',
@@ -35,6 +14,7 @@ const grids = ref<TextGrid[]>(
     text: grid[2] as string,
   })),
 )
+
 const startGridIndex = ref<number>()
 const boxes = ref<(TextGrid | Scene)[]>(grids.value)
 const activeScene = ref<Scene>()
@@ -42,12 +22,10 @@ const activeScene = ref<Scene>()
 // 初始化数据
 onMounted(async () => {
   if (import.meta.env.MODE === 'development') {
-    const { default: boxesData } = (await import('@/test/boxes.json')) as {
-      default: (TextGrid | Scene)[]
-    }
-    boxes.value = boxesData
-    // @ts-ignore
-    sceneStore.scene = boxesData[0] as Scene
+    const { default: boxesData } = await import('@/test/boxes.json')
+    boxes.value = boxesData as Scene[]
+    editingStore.scenes = boxesData as Scene[]
+    editingStore.scene = boxesData[0] as Scene
     activeScene.value = boxesData[0] as Scene
   }
 })
@@ -65,13 +43,8 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
         .flat()
       const newScene: Scene = {
         type: 'scene',
-        text: selectedGrids.map((grid) => grid.text).join(''),
         grids: selectedGrids,
-        layout: {
-          rows: 1,
-          cols: 1,
-          blocks: [{ pl: 0, pt: 0, pr: 0, pb: 0 }],
-        },
+        objects: [],
       }
       boxes.value.splice(
         startGridIndex.value,
@@ -82,7 +55,7 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
     }
   } else {
     // @ts-ignore
-    sceneStore.scene = box
+    editingStore.scene = box
     activeScene.value = box
   }
 }
@@ -90,7 +63,7 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 
 <template>
   <div
-    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-scroll pb-2"
+    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-auto pb-2"
   >
     <div
       v-for="(box, index) in boxes"

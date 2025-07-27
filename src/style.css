@@ -240,7 +240,7 @@
     @apply border-border box-border;
   }
   body {
-    @apply bg-background text-foreground m-0 text-sm;
+    @apply bg-background text-foreground m-0 text-sm select-none;
   }
   img {
     @apply max-w-none;
@@ -292,4 +292,12 @@
 }
 ::-webkit-scrollbar-thumb {
   @apply bg-stroke rounded-full;
+}
+
+.triangle-rectangle {
+  @apply relative size-3 bg-white;
+}
+.triangle-rectangle::before {
+  content: '';
+  @apply absolute -top-[6px] size-0 border-[6px] border-t-0 border-transparent border-b-white;
 }

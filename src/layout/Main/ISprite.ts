@@ -2,6 +2,7 @@ import { Sprite, Texture, type SpriteOptions } from 'pixi.js'
 import Control from './Control'
 import { eventEmitter } from '@/pixi'
 import useRulerStore from '@/store/ruler'
+import { useEditingStore } from '@/store'
 
 class ISprite extends Sprite {
   #control: Control | null = null
@@ -19,6 +20,7 @@ class ISprite extends Sprite {
     this.on('pointerdown', (e) => {
       if (!this.#isSelected) {
         eventEmitter.emit('deselect')
+        useEditingStore().selectObject(this.uid)
         this.#isSelected = true
 
         const control = new Control(this, e)
@@ -40,6 +42,7 @@ class ISprite extends Sprite {
 
     eventEmitter.on('deselect', () => {
       if (this.#isSelected) {
+        useEditingStore().deselectObject(this.uid)
         this.#isSelected = false
         this.#control?.destroy()
         this.#control = null
@@ -48,6 +51,7 @@ class ISprite extends Sprite {
 
     eventEmitter.on('delete', () => {
       if (this.#isSelected) {
+        useEditingStore().removeObject(this.uid)
         this.#control?.destroy()
         super.destroy()
       }

@@ -3,20 +3,27 @@ import { Redo2, Undo2 } from 'lucide-vue-next'
 import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
 import pixi, { eventEmitter, pixiOuter } from '@/pixi'
-import { ref, onMounted, computed, watchEffect, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Assets, Texture } from 'pixi.js'
 import ISprite from './ISprite'
 import SceneLine from '../SceneEditor/SceneLine'
-import { useSceneStore, useSizeStore } from '@/store'
-import { onClickOutside } from '@vueuse/core'
+import { useEditingStore, useSizeStore } from '@/store'
 import type { TransferData } from '../AssetsExplorer/utils'
+import { AssetTypeEnum } from '@/endpoints/asset'
 
 const containerRef = ref<HTMLDivElement>()
 const canvasInited = ref<boolean>(false)
 
 const { size } = useSizeStore()
-const sceneStore = useSceneStore()
-const scene = computed(() => sceneStore.scene).value
+const editingStore = useEditingStore()
+
+const deselectAll = (e: Event) => {
+  console.log(e)
+
+  e.stopPropagation()
+  e.stopImmediatePropagation()
+  eventEmitter.emit('deselect')
+}
 
 /**
  * Resizes the pixi canvas to fit the container.
@@ -45,14 +52,12 @@ const handleResize = (containerWidth: number, containerHeight: number) => {
     containerRef.value!.appendChild(pixi.canvas)
     canvasInited.value = true
 
-    const deselectAll = () => {
-      eventEmitter.emit('deselect')
-    }
-
     pixi.stage.eventMode = 'static'
     pixi.stage.hitArea = pixi.screen
     pixi.stage.on('pointerdown', deselectAll)
-    onClickOutside(pixi.canvas, deselectAll)
+    pixi.canvas.onclick = (e) => {
+      e.stopPropagation()
+    }
   }
 }
 
@@ -96,17 +101,17 @@ const handleDrop = async (e: DragEvent) => {
   sprite.x = sprite.x - sprite.width * data.pointerPercentX
   sprite.y = sprite.y - sprite.height * data.pointerPercentY
 
-  if (scene) {
-    // sceneStore.addObject({
-    //   x: sprite.x,
-    //   y: sprite.y,
-    //   width: sprite.width,
-    //   height: sprite.height,
-    //   range: [0, scene.grids.length],
-    //   type: AssetTypeEnum.IMAGE,
-    //   src: data.src,
-    // })
-    console.log(1)
+  if (editingStore.scene) {
+    editingStore.addObject({
+      x: sprite.x,
+      y: sprite.y,
+      width: sprite.width,
+      height: sprite.height,
+      range: [0, editingStore.scene.grids.length],
+      type: AssetTypeEnum.IMAGE,
+      src: data.src,
+      id: sprite.uid,
+    })
   }
 
   pixi.stage.addChild(sprite)
@@ -126,6 +131,7 @@ const handleDragOver = (e: DragEvent) => {
       class="relative grow"
       @dragover="handleDragOver($event)"
       @drop="handleDrop($event)"
+      @click="deselectAll"
     ></div>
     <Timeline />
 
