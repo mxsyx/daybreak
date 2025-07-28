@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Redo2, Undo2 } from 'lucide-vue-next'
+import { Pause, Play, Redo2, Undo2 } from 'lucide-vue-next'
 import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
 import pixi, { eventEmitter, pixiOuter } from '@/pixi'
@@ -18,8 +18,6 @@ const { size } = useSizeStore()
 const editingStore = useEditingStore()
 
 const deselectAll = (e: Event) => {
-  console.log(e)
-
   e.stopPropagation()
   e.stopImmediatePropagation()
   eventEmitter.emit('deselect')
@@ -142,11 +140,13 @@ const handleDragOver = (e: DragEvent) => {
           <Redo2 :size="20" class="text-foreground-5" />
         </div>
 
-        <!-- prettier-ignore -->
         <button
-            class="size-8 rounded-full bg-background-inverted text-foreground-inverted flex-center cursor-pointer pl-[3px]"
-        >▶</button>
-
+          class="size-8 rounded-full bg-background-inverted text-foreground-inverted flex-center cursor-pointer"
+          @click="editingStore.togglePlaying"
+        >
+          <Play v-if="!editingStore.isPlaying" :size="20" class="pl-[2px]" />
+          <Pause v-else :size="20" />
+        </button>
         <div>
           <ToggleRuler />
         </div>

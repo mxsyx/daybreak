@@ -1,5 +1,5 @@
 use wasm_bindgen::prelude::*;
-use std::cmp::max;
+use std::cmp::Ordering;
 
 #[wasm_bindgen]
 extern "C" {
@@ -19,31 +19,31 @@ pub fn main() {
     #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
     
-    console_log!("Rust WebAssembly AVL Interval Tree loaded!");
+    console_log!("Rust WebAssembly AVL Interval Tree (Float) loaded!");
 }
 
 #[wasm_bindgen]
 #[derive(Clone, Debug)]
 pub struct Interval {
-    start: i32,
-    end: i32,
+    start: f64,
+    end: f64,
     data: String,
 }
 
 #[wasm_bindgen]
 impl Interval {
     #[wasm_bindgen(constructor)]
-    pub fn new(start: i32, end: i32, data: String) -> Interval {
+    pub fn new(start: f64, end: f64, data: String) -> Interval {
         Interval { start, end, data }
     }
 
     #[wasm_bindgen(getter)]
-    pub fn start(&self) -> i32 {
+    pub fn start(&self) -> f64 {
         self.start
     }
 
     #[wasm_bindgen(getter)]
-    pub fn end(&self) -> i32 {
+    pub fn end(&self) -> f64 {
         self.end
     }
 
@@ -58,15 +58,17 @@ impl Interval {
     }
 }
 
+#[wasm_bindgen]
 #[derive(Clone)]
 struct AVLNode {
     interval: Interval,
     left: Option<Box<AVLNode>>,
     right: Option<Box<AVLNode>>,
     height: i32,
-    max_end: i32,
+    max_end: f64,
 }
 
+#[wasm_bindgen]
 impl AVLNode {
     fn new(interval: Interval) -> Self {
         let max_end = interval.end;
@@ -78,6 +80,11 @@ impl AVLNode {
             max_end,
         }
     }
+}
+
+// Helper function to get maximum of two f64 values
+fn max_f64(a: f64, b: f64) -> f64 {
+    if a > b { a } else { b }
 }
 
 #[wasm_bindgen]
@@ -107,16 +114,16 @@ impl IntervalTree {
     }
 
     fn update_height(node: &mut Box<AVLNode>) {
-        node.height = 1 + max(Self::get_height(&node.left), Self::get_height(&node.right));
+        node.height = 1 + std::cmp::max(Self::get_height(&node.left), Self::get_height(&node.right));
     }
 
     fn update_max_end(node: &mut Box<AVLNode>) {
         node.max_end = node.interval.end;
         if let Some(ref left) = node.left {
-            node.max_end = max(node.max_end, left.max_end);
+            node.max_end = max_f64(node.max_end, left.max_end);
         }
         if let Some(ref right) = node.right {
-            node.max_end = max(node.max_end, right.max_end);
+            node.max_end = max_f64(node.max_end, right.max_end);
         }
     }
 
@@ -218,7 +225,7 @@ impl IntervalTree {
 
     fn search_overlapping_recursive(
         root: &Option<Box<AVLNode>>,
-        point: i32,
+        point: f64,
         result: &mut Vec<Interval>,
     ) {
         if let Some(node) = root {
@@ -250,13 +257,13 @@ impl IntervalTree {
     }
 
     #[wasm_bindgen]
-    pub fn insert(&mut self, start: i32, end: i32, data: String) {
+    pub fn insert(&mut self, start: f64, end: f64, data: String) {
         let interval = Interval::new(start, end, data);
         self.root = Self::insert_recursive(self.root.take(), interval);
     }
 
     #[wasm_bindgen]
-    pub fn find_overlapping(&self, point: i32) -> Vec<JsValue> {
+    pub fn find_overlapping(&self, point: f64) -> Vec<JsValue> {
         let mut result = Vec::new();
         Self::search_overlapping_recursive(&self.root, point, &mut result);
         
@@ -328,22 +335,22 @@ impl IntervalTree {
     }
 }
 
-// Test function
+// Test function with floating point values
 #[wasm_bindgen]
 pub fn run_test() {
-    console_log!("Starting AVL Interval Tree test...");
+    console_log!("Starting AVL Interval Tree (Float) test...");
 
     let mut tree = IntervalTree::new();
 
-    // Insert some intervals
+    // Insert some intervals with floating point values
     let intervals = vec![
-        (1, 3, "A"),
-        (2, 5, "B"),
-        (4, 7, "C"),
-        (6, 8, "D"),
-        (8, 10, "E"),
-        (9, 12, "F"),
-        (0, 2, "G"),
+        (1.5, 3.2, "A"),
+        (2.1, 5.7, "B"),
+        (4.3, 7.8, "C"),
+        (6.5, 8.9, "D"),
+        (8.1, 10.4, "E"),
+        (9.3, 12.6, "F"),
+        (0.5, 2.3, "G"),
     ];
 
     console_log!("Inserting intervals:");
@@ -361,8 +368,8 @@ pub fn run_test() {
         console_log!("{}", interval_str.as_string().unwrap());
     }
 
-    // Test finding intervals overlapping with specific points
-    let test_points = vec![1, 3, 5, 7, 9, 11, 15];
+    // Test finding intervals overlapping with specific points (floating point)
+    let test_points = vec![1.0, 3.5, 5.2, 7.1, 9.8, 11.5, 15.0];
     console_log!("\nFinding intervals overlapping with specific points:");
     for point in test_points {
         let overlapping = tree.find_overlapping(point);

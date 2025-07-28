@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useEditingStore } from '@/store'
 import { cn } from '@/lib/utils'
+import { IntervalTree } from './IntervalTree'
 
 const SLIDER_TRACKER_SIZE = 12
+
+const intervalTree = new IntervalTree()
 
 const editingStore = useEditingStore()
 const grids = computed(() => editingStore.scene?.grids ?? [])
@@ -14,6 +17,13 @@ const isDragging = ref<boolean>(false)
 
 let lIndex = computed(() => editingStore.object?.range[0] ?? -1)
 let rIndex = computed(() => editingStore.object?.range[1] ?? -1)
+
+let totalFrame = 0
+let currentFrame = 0
+let now = 0
+let stepWidth = 0
+let offsetLeft = 0
+let containerWidth = 0
 
 const handlePointerMove = (e: PointerEvent) => {
   if (!isDragging.value) {
@@ -39,6 +49,9 @@ const handlePointerUp = () => {
 }
 
 const handlePointerDown = () => {
+  if (editingStore.isPlaying) {
+    return
+  }
   isDragging.value = true
   document.addEventListener('pointermove', handlePointerMove)
   document.addEventListener('pointerup', handlePointerUp)
@@ -49,18 +62,12 @@ const handleJumpTo = (e: MouseEvent) => {
   let left =
     (e.currentTarget as HTMLDivElement).offsetLeft - SLIDER_TRACKER_SIZE / 2
   left = Math.max(left, 0)
+  offsetLeft = left
   sliderRef.value!.style.left = `${left}px`
 }
 
-let isPlaying = false
-let totalFrame = 0
-let currentFrame = 0
-let now = 0
-let stepWidth = 0
-let offsetLeft = 0
-
 const play = () => {
-  if (!isPlaying) {
+  if (!editingStore.isPlaying) {
     return
   }
 
@@ -68,21 +75,40 @@ const play = () => {
   offsetLeft += stepWidth
   currentFrame++
 
+  const percentleft = (offsetLeft % containerWidth) / containerWidth
+  if (percentleft.toPrecision(2) === '0.80') {
+    containerRef.value!.scrollTo({
+      left: containerRef.value!.scrollLeft + containerWidth * 0.8,
+      behavior: 'smooth',
+    })
+  }
+
+  // intervalTree.findOverlapping((Date.now() - now) / 1000).toString()
+
   if (currentFrame < totalFrame) {
     requestAnimationFrame(play)
+  } else {
+    editingStore.isPlaying = false
   }
 }
 
-onMounted(() => {
-  setTimeout(() => {
+watch(editingStore, () => {
+  if (editingStore.isPlaying) {
     const duration = grids.value.at(-1)!.end - grids.value[0].start
     totalFrame = duration * 60
     stepWidth = containerRef.value!.scrollWidth / totalFrame
-    isPlaying = true
     now = Date.now()
+    containerWidth = containerRef.value!.clientWidth
 
     requestAnimationFrame(play)
-  }, 1500)
+  }
+})
+
+watch(grids, () => {
+  grids.value.forEach((grid, index) => {
+    intervalTree.clear()
+    intervalTree.insert(grid.start, grid.end, index.toString())
+  })
 })
 </script>
 
@@ -105,7 +131,7 @@ onMounted(() => {
             index === rIndex && 'border-r-2 rounded-r-lg',
           )
         "
-        :draggable="!isDragging"
+        :draggable="!isDragging && !editingStore.isPlaying"
         @click="handleJumpTo($event)"
       >
         <span class="whitespace-nowrap">

@@ -4,6 +4,7 @@ interface State {
   scenes: Scene[]
   scene: Scene | null
   object: SceneObject | null
+  isPlaying: boolean
 }
 
 interface Actions {
@@ -11,6 +12,9 @@ interface Actions {
   removeObject: (id: number) => void
   selectObject: (id: number) => void
   deselectObject: (id: number) => void
+  play: VoidFunction
+  pause: VoidFunction
+  togglePlaying: VoidFunction
 }
 
 const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
@@ -18,6 +22,7 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
     scenes: [],
     scene: null,
     object: null,
+    isPlaying: false,
   }),
   actions: {
     addObject(object: SceneObject) {
@@ -42,6 +47,15 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
       if (this.object?.id === id) {
         this.object = null
       }
+    },
+    play() {
+      this.isPlaying = true
+    },
+    pause() {
+      this.isPlaying = false
+    },
+    togglePlaying() {
+      this.isPlaying = !this.isPlaying
     },
   },
 })
