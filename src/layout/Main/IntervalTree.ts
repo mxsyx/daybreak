@@ -4,7 +4,12 @@
 interface IInterval {
   start: number
   end: number
-  data: string
+  data: IntervalData
+}
+
+interface IntervalData {
+  type: 'grid' | 'object'
+  id: string
 }
 
 /**
@@ -13,9 +18,9 @@ interface IInterval {
 class Interval implements IInterval {
   public readonly start: number
   public readonly end: number
-  public readonly data: string
+  public readonly data: IntervalData
 
-  constructor(start: number, end: number, data: string) {
+  constructor(start: number, end: number, data: IntervalData) {
     if (start > end) {
       throw new Error(
         `Invalid interval: start (${start}) must be <= end (${end})`,
@@ -304,7 +309,7 @@ export class IntervalTree {
   /**
    * Insert interval
    */
-  insert(start: number, end: number, data: string): void {
+  insert(start: number, end: number, data: IntervalData): void {
     const interval = new Interval(start, end, data)
     this.root = this.insertRecursive(this.root, interval)
   }
@@ -313,7 +318,7 @@ export class IntervalTree {
    * Batch insert intervals
    */
   insertBatch(
-    intervals: Array<{ start: number; end: number; data: string }>,
+    intervals: Array<{ start: number; end: number; data: IntervalData }>,
   ): BatchResult<void> {
     const startTime = performance.now()
     const results: void[] = []
@@ -376,7 +381,11 @@ export class IntervalTree {
    * Find all intervals overlapping with the specified interval
    */
   findIntervalOverlapping(start: number, end: number): Interval[] {
-    const queryInterval: IInterval = { start, end, data: '' }
+    const queryInterval: IInterval = {
+      start,
+      end,
+      data: { type: 'grid', id: '' },
+    }
     const result: Interval[] = []
     this.searchIntervalOverlappingRecursive(this.root, queryInterval, result)
     return result

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { IntervalTree } from './IntervalTree'
 
 const SLIDER_TRACKER_SIZE = 12
+const FRAME_DURATION = 1000 / 60
 
 const intervalTree = new IntervalTree()
 
@@ -58,12 +59,13 @@ const handlePointerDown = () => {
   sliderRef.value!.style.cursor = 'grabbing'
 }
 
-const handleJumpTo = (e: MouseEvent) => {
+const handleJumpTo = (e: MouseEvent, gridIndex: number) => {
   let left =
     (e.currentTarget as HTMLDivElement).offsetLeft - SLIDER_TRACKER_SIZE / 2
   left = Math.max(left, 0)
   offsetLeft = left
   sliderRef.value!.style.left = `${left}px`
+  editingStore.currentGridId = gridIndex
 }
 
 const play = () => {
@@ -83,7 +85,17 @@ const play = () => {
     })
   }
 
-  // intervalTree.findOverlapping((Date.now() - now) / 1000).toString()
+  const now = currentFrame * FRAME_DURATION
+  console.log(now)
+
+  const intervals = intervalTree.findOverlapping(now)
+  const currentGridId = intervals.find(
+    (interval) => interval.data.type === 'grid',
+  )?.data.id
+
+  if (currentGridId) {
+    editingStore.currentGridId = parseInt(currentGridId)
+  }
 
   if (currentFrame < totalFrame) {
     requestAnimationFrame(play)
@@ -92,22 +104,32 @@ const play = () => {
   }
 }
 
-watch(editingStore, () => {
-  if (editingStore.isPlaying) {
-    const duration = grids.value.at(-1)!.end - grids.value[0].start
-    totalFrame = duration * 60
-    stepWidth = containerRef.value!.scrollWidth / totalFrame
-    now = Date.now()
-    containerWidth = containerRef.value!.clientWidth
+watch(
+  () => editingStore.isPlaying,
+  () => {
+    if (editingStore.isPlaying) {
+      const duration = grids.value.at(-1)!.end - grids.value[0].start
 
-    requestAnimationFrame(play)
-  }
-})
+      totalFrame = duration / FRAME_DURATION
+      console.log(totalFrame)
+
+      stepWidth = containerRef.value!.scrollWidth / totalFrame
+      containerWidth = containerRef.value!.clientWidth
+      if (!now) {
+        now = Date.now()
+      }
+      requestAnimationFrame(play)
+    }
+  },
+)
 
 watch(grids, () => {
+  intervalTree.clear()
   grids.value.forEach((grid, index) => {
-    intervalTree.clear()
-    intervalTree.insert(grid.start, grid.end, index.toString())
+    intervalTree.insert(grid.start, grid.end, {
+      type: 'grid',
+      id: index.toString(),
+    })
   })
 })
 </script>
@@ -132,7 +154,7 @@ watch(grids, () => {
           )
         "
         :draggable="!isDragging && !editingStore.isPlaying"
-        @click="handleJumpTo($event)"
+        @click="handleJumpTo($event, index)"
       >
         <span class="whitespace-nowrap">
           {{ grid.text }}
@@ -141,7 +163,7 @@ watch(grids, () => {
           v-if="index < lIndex || index > rIndex"
           class="absolute top-[2px] right-1 text-xs text-muted-foreground"
         >
-          {{ grid.start }}
+          {{ grid.start / 1000 }}
         </span>
         <div
           v-if="lIndex === rIndex && index !== grids.length - 1"

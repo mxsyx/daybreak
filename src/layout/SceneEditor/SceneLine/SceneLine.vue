@@ -23,6 +23,13 @@ const activeScene = ref<Scene>()
 onMounted(async () => {
   if (import.meta.env.MODE === 'development') {
     const { default: boxesData } = await import('@/test/boxes.json')
+    boxesData.forEach((box) => {
+      box.grids.forEach((grid) => {
+        grid.start = grid.start * 1000
+        grid.end = grid.end * 1000
+      })
+    })
+
     boxes.value = boxesData as Scene[]
     editingStore.scenes = boxesData as Scene[]
     editingStore.scene = boxesData[0] as Scene
