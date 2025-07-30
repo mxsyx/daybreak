@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useEditingStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { IntervalTree } from './IntervalTree'
@@ -14,6 +14,8 @@ const grids = computed(() => editingStore.scene?.grids ?? [])
 
 const containerRef = ref<HTMLDivElement>()
 const sliderRef = ref<HTMLDivElement>()
+const boundaryIndicatorRef = ref<HTMLDivElement>()
+
 const isDragging = ref<boolean>(false)
 
 let lIndex = computed(() => editingStore.object?.range[0] ?? -1)
@@ -25,6 +27,7 @@ let now = 0
 let stepWidth = 0
 let offsetLeft = 0
 let containerWidth = 0
+let containerLeft = 0
 
 const handlePointerMove = (e: PointerEvent) => {
   if (!isDragging.value) {
@@ -32,7 +35,7 @@ const handlePointerMove = (e: PointerEvent) => {
   }
   let left =
     e.clientX -
-    containerRef.value!.getBoundingClientRect().left +
+    containerLeft +
     containerRef.value!.scrollLeft -
     SLIDER_TRACKER_SIZE / 2
   left = Math.min(
@@ -132,6 +135,53 @@ watch(grids, () => {
     })
   })
 })
+
+let pointerX = 0
+let isHovering = false
+let isKeydown = false
+let hoveringIndex = -1
+
+onMounted(() => {
+  const handlePointerMove = (e: PointerEvent) => {
+    boundaryIndicatorRef.value!.style.left = `${e.clientX - containerLeft}px`
+    pointerX = e.clientX
+  }
+
+  const container = containerRef.value!
+
+  container.addEventListener('pointerenter', () => {
+    isHovering = true
+    document.addEventListener('pointermove', handlePointerMove)
+  })
+  container.addEventListener('pointerleave', () => {
+    isHovering = false
+    document.removeEventListener('pointermove', handlePointerMove)
+  })
+
+  container.addEventListener('contextmenu', (e) => {
+    if (isKeydown) {
+      e.preventDefault()
+    }
+  })
+  container.addEventListener('click', (e) => {
+    console.log(e.currentTarget)
+  })
+
+  const handleKeyEvent = (e: KeyboardEvent) => {
+    if (isHovering && e.key === 'Shift') {
+      isKeydown = e.type === 'keydown'
+      boundaryIndicatorRef.value!.style.display = isKeydown ? 'block' : 'none'
+      boundaryIndicatorRef.value!.style.left = `${pointerX - containerLeft}px`
+    }
+  }
+
+  document.addEventListener('keydown', handleKeyEvent)
+  document.addEventListener('keyup', handleKeyEvent)
+})
+
+onMounted(() => {
+  containerLeft = containerRef.value!.getBoundingClientRect().left
+})
 </script>
 
 <template>
@@ -145,7 +195,7 @@ watch(grids, () => {
         :key="index"
         :class="
           cn(
-            'cursor-pointer px-3 flex flex-col justify-center relative hover:bg-[#1e293b80] select-none',
+            'cursor-pointer px-3 flex flex-col justify-center relative hover:bg-[#1e293b80]',
             index >= lIndex &&
               index <= rIndex &&
               'border-y-2 my-2 bg-[#1e293b80]',
@@ -171,6 +221,8 @@ watch(grids, () => {
         ></div>
       </div>
     </div>
+
+    <!-- Slider -->
     <div
       ref="sliderRef"
       class="flex-col-center absolute bottom-1 left-0 cursor-grab"
@@ -179,5 +231,12 @@ watch(grids, () => {
       <div class="w-[2px] h-18 bg-white rounded-xl translate-y-1"></div>
       <div class="triangle-rectangle"></div>
     </div>
+
+    <!-- Boundary Indicator -->
+    <div
+      ref="boundaryIndicatorRef"
+      class="absolute bottom-1 -left-1 w-[2px] h-20 bg-primary rounded-xl hidden"
+      @pointerdown="handlePointerDown"
+    ></div>
   </div>
 </template>
