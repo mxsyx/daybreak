@@ -6,6 +6,9 @@ interface State {
   object: SceneObject | null
   isPlaying: boolean
   currentGridId?: number
+  totalFrame: number
+  currentFrame: number
+  now: number
 }
 
 interface Actions {
@@ -25,6 +28,9 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
     object: null,
     isPlaying: false,
     currentGridId: undefined,
+    totalFrame: 0,
+    currentFrame: 0,
+    now: 0,
   }),
   actions: {
     addObject(object: SceneObject) {

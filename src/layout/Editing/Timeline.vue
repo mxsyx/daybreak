@@ -3,9 +3,9 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useEditingStore } from '@/store'
 import { cn } from '@/lib/utils'
 import { IntervalTree } from './IntervalTree'
+import { FRAME_DURATION } from '@/lib/constants'
 
 const SLIDER_TRACKER_SIZE = 12
-const FRAME_DURATION = 1000 / 60
 
 const intervalTree = new IntervalTree()
 
@@ -21,13 +21,18 @@ const isDragging = ref<boolean>(false)
 let lIndex = computed(() => editingStore.object?.range[0] ?? -1)
 let rIndex = computed(() => editingStore.object?.range[1] ?? -1)
 
-let totalFrame = 0
-let currentFrame = 0
-let now = 0
-let stepWidth = 0
+computed(() => {
+  if (grids.value.length > 0) {
+    return null
+  }
+  return null
+})
+
+let frameWidth = 0
 let offsetLeft = 0
-let containerWidth = 0
 let containerLeft = 0
+let containerWidth = 0
+let now = 0
 
 const handlePointerMove = (e: PointerEvent) => {
   if (!isDragging.value) {
@@ -77,8 +82,8 @@ const play = () => {
   }
 
   sliderRef.value!.style.left = `${offsetLeft}px`
-  offsetLeft += stepWidth
-  currentFrame++
+  offsetLeft += frameWidth
+  editingStore.currentFrame++
 
   const percentleft = (offsetLeft % containerWidth) / containerWidth
   if (percentleft.toPrecision(2) === '0.80') {
@@ -88,8 +93,8 @@ const play = () => {
     })
   }
 
-  const now = currentFrame * FRAME_DURATION
-  console.log(now)
+  const now = editingStore.currentFrame * FRAME_DURATION
+  editingStore.now = now
 
   const intervals = intervalTree.findOverlapping(now)
   const currentGridId = intervals.find(
@@ -100,7 +105,7 @@ const play = () => {
     editingStore.currentGridId = parseInt(currentGridId)
   }
 
-  if (currentFrame < totalFrame) {
+  if (editingStore.currentFrame < editingStore.totalFrame) {
     requestAnimationFrame(play)
   } else {
     editingStore.isPlaying = false
@@ -111,13 +116,6 @@ watch(
   () => editingStore.isPlaying,
   () => {
     if (editingStore.isPlaying) {
-      const duration = grids.value.at(-1)!.end - grids.value[0].start
-
-      totalFrame = duration / FRAME_DURATION
-      console.log(totalFrame)
-
-      stepWidth = containerRef.value!.scrollWidth / totalFrame
-      containerWidth = containerRef.value!.clientWidth
       if (!now) {
         now = Date.now()
       }
@@ -139,7 +137,19 @@ watch(grids, () => {
 let pointerX = 0
 let isHovering = false
 let isKeydown = false
-let hoveringIndex = -1
+
+// Set frame params.
+watch(grids, () => {
+  if (grids.value.length > 0) {
+    const duration = grids.value.at(-1)!.end - grids.value[0].start
+    const totalFrame = duration / FRAME_DURATION
+    editingStore.totalFrame = totalFrame
+    frameWidth = containerRef.value!.scrollWidth / totalFrame
+  } else {
+    editingStore.totalFrame = 0
+    frameWidth = 0
+  }
+})
 
 onMounted(() => {
   const handlePointerMove = (e: PointerEvent) => {
@@ -179,8 +189,11 @@ onMounted(() => {
   document.addEventListener('keyup', handleKeyEvent)
 })
 
+// Initial container params.
 onMounted(() => {
-  containerLeft = containerRef.value!.getBoundingClientRect().left
+  const clientRect = containerRef.value!.getBoundingClientRect()
+  containerLeft = clientRect.left
+  containerWidth = clientRect.width
 })
 </script>
 
@@ -196,11 +209,6 @@ onMounted(() => {
         :class="
           cn(
             'cursor-pointer px-3 flex flex-col justify-center relative hover:bg-[#1e293b80]',
-            index >= lIndex &&
-              index <= rIndex &&
-              'border-y-2 my-2 bg-[#1e293b80]',
-            index === lIndex && 'border-l-2 rounded-l-lg',
-            index === rIndex && 'border-r-2 rounded-r-lg',
           )
         "
         :draggable="!isDragging && !editingStore.isPlaying"

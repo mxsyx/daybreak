@@ -105,7 +105,7 @@ const handleDrop = async (e: DragEvent) => {
       y: sprite.y,
       width: sprite.width,
       height: sprite.height,
-      range: [editingStore.currentGridId ?? 0, editingStore.scene.grids.length],
+      range: [editingStore.currentFrame, editingStore.totalFrame],
       type: AssetTypeEnum.IMAGE,
       src: data.src,
       id: sprite.uid,
