@@ -105,7 +105,7 @@ const handleDrop = async (e: DragEvent) => {
       y: sprite.y,
       width: sprite.width,
       height: sprite.height,
-      range: [editingStore.currentFrame, editingStore.totalFrame],
+      interval: [editingStore.currentFrame, editingStore.totalFrame],
       type: AssetTypeEnum.IMAGE,
       src: data.src,
       id: sprite.uid,
@@ -122,7 +122,7 @@ const handleDragOver = (e: DragEvent) => {
 
 <template>
   <main
-    class="flex flex-col gap-4 bg-surface-1 border border-stroke p-3 rounded-xl overflow-x-hidden"
+    class="bg-surface-1 border-stroke flex flex-col gap-4 overflow-x-hidden rounded-xl border p-3"
   >
     <div
       ref="containerRef"
@@ -134,14 +134,14 @@ const handleDragOver = (e: DragEvent) => {
     <Timeline />
 
     <div>
-      <div class="flex-between pt-4 border-t">
-        <div class="flex items-center gap-2 center">
+      <div class="flex-between border-t pt-4">
+        <div class="center flex items-center gap-2">
           <Undo2 :size="20" class="text-foreground-5" />
           <Redo2 :size="20" class="text-foreground-5" />
         </div>
 
         <button
-          class="size-8 rounded-full bg-background-inverted text-foreground-inverted flex-center cursor-pointer"
+          class="bg-background-inverted text-foreground-inverted flex-center size-8 cursor-pointer rounded-full"
           @click="editingStore.togglePlaying"
         >
           <Play v-if="!editingStore.isPlaying" :size="20" class="pl-[2px]" />

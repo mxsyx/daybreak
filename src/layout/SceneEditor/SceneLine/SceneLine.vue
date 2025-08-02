@@ -24,10 +24,19 @@ onMounted(async () => {
   if (import.meta.env.MODE === 'development') {
     const { default: boxesData } = await import('@/test/boxes.json')
     boxesData.forEach((box) => {
-      box.grids.forEach((grid) => {
+      const { grids } = box
+      grids.forEach((grid) => {
         grid.start = grid.start * 1000
         grid.end = grid.end * 1000
       })
+
+      for (let i = 0; i < grids.length - 1; i++) {
+        const grid = grids[i]
+        const nextGrid = grids[i + 1]
+        if (nextGrid) {
+          grid.end = nextGrid.start
+        }
+      }
     })
 
     boxes.value = boxesData as Scene[]
@@ -70,7 +79,7 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
 
 <template>
   <div
-    class="flex flex-nowrap bg-surface-1 text-foreground-1 rounded-xl overflow-x-auto pb-2"
+    class="bg-surface-1 text-foreground-1 flex flex-nowrap overflow-x-auto rounded-xl pb-2"
   >
     <div
       v-for="(box, index) in boxes"
@@ -78,11 +87,11 @@ const handleClick = (box: TextGrid | Scene, index: number) => {
       :title="`点击选择${startGridIndex !== undefined ? '结束' : '开始'}位置`"
       :class="
         clsx(
-          'w-18 h-12 shrink-0 cursor-pointer px-2 py-1 border border-dashed text-base',
+          'h-12 w-18 shrink-0 cursor-pointer border border-dashed px-2 py-1 text-base',
           {
             'hover:bg-[#892fff] hover:text-white': box.type === 'grid',
             'bg-[#892fff]': startGridIndex === index,
-            'mx-1 rounded-[4px] bg-surface-2 !border-solid text-foreground-1':
+            'bg-surface-2 text-foreground-1 mx-1 rounded-[4px] !border-solid':
               box.type === 'scene',
             '!bg-[#892fff] text-white': box === activeScene,
           },

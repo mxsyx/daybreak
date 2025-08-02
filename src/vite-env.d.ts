@@ -31,7 +31,7 @@ interface BaseObject {
   y: number
   width: number
   height: number
-  range: [number, number]
+  interval: [number, number]
   type: AssetType
   src: string
   id: number

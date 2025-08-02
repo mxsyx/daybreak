@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useEditingStore } from '@/store'
-import { cn } from '@/lib/utils'
 import { IntervalTree } from './IntervalTree'
 import { FRAME_DURATION } from '@/lib/constants'
 
@@ -10,7 +9,15 @@ const SLIDER_TRACKER_SIZE = 12
 const intervalTree = new IntervalTree()
 
 const editingStore = useEditingStore()
-const grids = computed(() => editingStore.scene?.grids ?? [])
+const grids = computed(() => {
+  const grids = editingStore.scene?.grids ?? []
+  return grids.map((grid) => ({
+    ...grid,
+    frameStart: grid.start / FRAME_DURATION,
+    frameEnd: grid.end / FRAME_DURATION,
+    elementWidth: 0,
+  }))
+})
 
 const containerRef = ref<HTMLDivElement>()
 const sliderRef = ref<HTMLDivElement>()
@@ -18,8 +25,12 @@ const boundaryIndicatorRef = ref<HTMLDivElement>()
 
 const isDragging = ref<boolean>(false)
 
-let lIndex = computed(() => editingStore.object?.range[0] ?? -1)
-let rIndex = computed(() => editingStore.object?.range[1] ?? -1)
+let lFrame = computed(() => editingStore.object?.interval[0] ?? -1)
+let rFrame = computed(() => editingStore.object?.interval[1] ?? -1)
+
+let pointerX = 0
+let isHovering = false
+let isKeydown = false
 
 computed(() => {
   if (grids.value.length > 0) {
@@ -28,11 +39,10 @@ computed(() => {
   return null
 })
 
-let frameWidth = 0
 let offsetLeft = 0
 let containerLeft = 0
 let containerWidth = 0
-let now = 0
+let currentGridIndex = 0
 
 const handlePointerMove = (e: PointerEvent) => {
   if (!isDragging.value) {
@@ -67,23 +77,77 @@ const handlePointerDown = () => {
   sliderRef.value!.style.cursor = 'grabbing'
 }
 
-const handleJumpTo = (e: MouseEvent, gridIndex: number) => {
-  let left =
-    (e.currentTarget as HTMLDivElement).offsetLeft - SLIDER_TRACKER_SIZE / 2
+const jumpTo = (e: MouseEvent, gridIndex: number) => {
+  // prettier-ignore
+  let left = (e.currentTarget as HTMLDivElement).offsetLeft - SLIDER_TRACKER_SIZE / 2
   left = Math.max(left, 0)
   offsetLeft = left
   sliderRef.value!.style.left = `${left}px`
-  editingStore.currentGridId = gridIndex
+  editingStore.currentGridIndex = gridIndex
+  editingStore.currentFrame = grids.value[gridIndex].frameStart
 }
 
+const setObjectIntervalStart = (
+  e: MouseEvent,
+  grid: (typeof grids.value)[0],
+) => {
+  const { object } = editingStore
+  // if (isKeydown && object) {
+  //   const frame = (e.clientX - containerLeft) / frameWidth
+  //   editingStore.object.interval[0] = frame
+  //   if (frame > object.interval[1]) {
+  //     object.interval[1] = Math.min(
+  //       editingStore.totalFrame,
+  //       object.interval[1] + frame,
+  //     )
+  //   } else {
+  //   }
+  // }
+}
+
+const setObjectIntervalEnd = (e: MouseEvent) => {
+  // e.preventDefault()
+  // const frame = (e.clientX - containerLeft) / frameWidth
+  // if (isKeydown && editingStore.object) {
+  //   if (frame > editingStore.object.interval[0]) {
+  //     editingStore.object.interval[1] = frame
+  //   }
+  // }
+}
+
+let pre = 0
 const play = () => {
   if (!editingStore.isPlaying) {
     return
   }
 
+  const currentFrame = ++editingStore.currentFrame
+  const currentTime = currentFrame * FRAME_DURATION
+
+  let offsetLeft = 0
+
+  const intervals = intervalTree.findOverlapping(currentFrame)
+  const currentGridId = intervals.find(
+    (interval) => interval.data.type === 'grid',
+  )?.data.id
+  if (currentGridId) {
+    currentGridIndex = parseInt(currentGridId)
+  }
+
+  const currentGrid = grids.value[currentGridIndex]
+
+  for (let i = 0; i < currentGridIndex; i++) {
+    offsetLeft += grids.value[i].elementWidth
+  }
+
+  const timeInCurrentGrid = currentTime - currentGrid.start
+  const gridDuration = currentGrid.end - currentGrid.start
+  const relativePosition = timeInCurrentGrid / gridDuration
+  offsetLeft += relativePosition * currentGrid.elementWidth
+
+  editingStore.currentGridIndex = currentGridIndex
+
   sliderRef.value!.style.left = `${offsetLeft}px`
-  offsetLeft += frameWidth
-  editingStore.currentFrame++
 
   const percentleft = (offsetLeft % containerWidth) / containerWidth
   if (percentleft.toPrecision(2) === '0.80') {
@@ -93,22 +157,32 @@ const play = () => {
     })
   }
 
-  const now = editingStore.currentFrame * FRAME_DURATION
-  editingStore.now = now
-
-  const intervals = intervalTree.findOverlapping(now)
-  const currentGridId = intervals.find(
-    (interval) => interval.data.type === 'grid',
-  )?.data.id
-
-  if (currentGridId) {
-    editingStore.currentGridId = parseInt(currentGridId)
-  }
-
-  if (editingStore.currentFrame < editingStore.totalFrame) {
+  if (currentFrame < editingStore.totalFrame) {
     requestAnimationFrame(play)
   } else {
     editingStore.isPlaying = false
+  }
+}
+
+// Set frame params.
+const resetFrameParams = () => {
+  const clientRect = containerRef.value!.getBoundingClientRect()
+  containerLeft = clientRect.left
+  containerWidth = clientRect.width
+
+  if (grids.value.length > 0) {
+    const duration = grids.value.at(-1)!.end - grids.value[0].start
+    const totalFrame = duration / FRAME_DURATION
+    editingStore.totalFrame = totalFrame
+
+    grids.value.forEach((grid, index) => {
+      const element = document.querySelector(`[data-grid-index="${index}"]`)
+      if (element) {
+        grid.elementWidth = element.clientWidth
+      }
+    })
+  } else {
+    editingStore.totalFrame = 0
   }
 }
 
@@ -116,9 +190,8 @@ watch(
   () => editingStore.isPlaying,
   () => {
     if (editingStore.isPlaying) {
-      if (!now) {
-        now = Date.now()
-      }
+      pre = Date.now()
+      resetFrameParams()
       requestAnimationFrame(play)
     }
   },
@@ -127,29 +200,14 @@ watch(
 watch(grids, () => {
   intervalTree.clear()
   grids.value.forEach((grid, index) => {
-    intervalTree.insert(grid.start, grid.end, {
+    intervalTree.insert(grid.frameStart, grid.frameEnd, {
       type: 'grid',
       id: index.toString(),
     })
   })
 })
 
-let pointerX = 0
-let isHovering = false
-let isKeydown = false
-
-// Set frame params.
-watch(grids, () => {
-  if (grids.value.length > 0) {
-    const duration = grids.value.at(-1)!.end - grids.value[0].start
-    const totalFrame = duration / FRAME_DURATION
-    editingStore.totalFrame = totalFrame
-    frameWidth = containerRef.value!.scrollWidth / totalFrame
-  } else {
-    editingStore.totalFrame = 0
-    frameWidth = 0
-  }
-})
+watch(grids, resetFrameParams)
 
 onMounted(() => {
   const handlePointerMove = (e: PointerEvent) => {
@@ -191,44 +249,50 @@ onMounted(() => {
 
 // Initial container params.
 onMounted(() => {
-  const clientRect = containerRef.value!.getBoundingClientRect()
-  containerLeft = clientRect.left
-  containerWidth = clientRect.width
+  const observer = new ResizeObserver(resetFrameParams)
+  observer.observe(containerRef.value!)
 })
 </script>
 
 <template>
-  <div ref="containerRef" class="p-1 overflow-x-auto relative">
+  <div ref="containerRef" class="relative overflow-x-auto p-1">
     <div
       v-if="grids.length > 0"
-      class="border border-[#475569] bg-slate-900 rounded-lg h-20 w-max flex font-medium overflow-x-visible"
+      class="flex h-20 w-max overflow-x-visible rounded-lg border border-[#475569] bg-slate-900 font-medium"
     >
       <div
         v-for="(grid, index) in grids"
         :key="index"
-        :class="
-          cn(
-            'cursor-pointer px-3 flex flex-col justify-center relative hover:bg-[#1e293b80]',
-          )
-        "
+        class="relative flex cursor-pointer flex-col justify-center px-3 hover:bg-[#1e293b80]"
+        :data-grid-index="index"
         :draggable="!isDragging && !editingStore.isPlaying"
-        @click="handleJumpTo($event, index)"
+        @click="jumpTo($event, index)"
       >
         <span class="whitespace-nowrap">
           {{ grid.text }}
         </span>
         <span
-          v-if="index < lIndex || index > rIndex"
-          class="absolute top-[2px] right-1 text-xs text-muted-foreground"
+          v-if="grid.frameStart < lFrame || grid.frameEnd > rFrame"
+          class="text-muted-foreground absolute top-[2px] right-1 text-xs"
         >
-          {{ grid.start / 1000 }}
+          {{ grid.end / 1000 }}
         </span>
         <div
-          v-if="lIndex === rIndex && index !== grids.length - 1"
-          class="absolute w-px h-full right-0 bg-border"
+          v-if="lFrame === rFrame && index !== grids.length - 1"
+          class="bg-border absolute right-0 h-full w-px"
         ></div>
       </div>
     </div>
+
+    <!-- Object interval overlay -->
+    <div
+      v-if="lFrame !== -1 && rFrame !== -1"
+      class="absolute top-4 bottom-4 rounded-lg border-2 bg-[#1e293b80]"
+      :style="{
+        // left: `${lFrame * frameWidth}px`,
+        // width: `${(rFrame - lFrame) * frameWidth}px`,
+      }"
+    ></div>
 
     <!-- Slider -->
     <div
@@ -236,15 +300,16 @@ onMounted(() => {
       class="flex-col-center absolute bottom-1 left-0 cursor-grab"
       @pointerdown="handlePointerDown"
     >
-      <div class="w-[2px] h-18 bg-white rounded-xl translate-y-1"></div>
+      <div class="h-18 w-[2px] translate-y-1 rounded-xl bg-white"></div>
       <div class="triangle-rectangle"></div>
     </div>
 
     <!-- Boundary Indicator -->
     <div
       ref="boundaryIndicatorRef"
-      class="absolute bottom-1 -left-1 w-[2px] h-20 bg-primary rounded-xl hidden"
-      @pointerdown="handlePointerDown"
+      class="bg-primary absolute bottom-1 -left-1 hidden h-20 w-[2px] rounded-xl"
+      @click="setObjectIntervalStart"
+      @contextmenu="setObjectIntervalEnd"
     ></div>
   </div>
 </template>

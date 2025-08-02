@@ -5,10 +5,9 @@ interface State {
   scene: Scene | null
   object: SceneObject | null
   isPlaying: boolean
-  currentGridId?: number
+  currentGridIndex?: number
   totalFrame: number
   currentFrame: number
-  now: number
 }
 
 interface Actions {
@@ -27,7 +26,7 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
     scene: null,
     object: null,
     isPlaying: false,
-    currentGridId: undefined,
+    currentGridIndex: undefined,
     totalFrame: 0,
     currentFrame: 0,
     now: 0,
