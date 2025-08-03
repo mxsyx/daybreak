@@ -30,6 +30,7 @@ onMounted(async () => {
         grid.end = grid.end * 1000
       })
 
+      grids[0].start = 0
       for (let i = 0; i < grids.length - 1; i++) {
         const grid = grids[i]
         const nextGrid = grids[i + 1]
