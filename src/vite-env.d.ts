@@ -1,45 +1,51 @@
 /// <reference types="vite/client" />
 
-type Dict<T = any> = Record<string, T>
+import type { ViewContainer } from 'pixi.js'
+import type { Raw } from 'vue'
 
-type ReactFC<T = unknown> = React.FC<T & { children: React.ReactNode }>
+declare global {
+  type Dict<T = any> = Record<string, T>
 
-interface TextGrid {
-  type: 'grid'
-  start: number
-  end: number
-  text: string
-  scene?: string
-}
+  type ReactFC<T = unknown> = React.FC<T & { children: React.ReactNode }>
 
-interface Scene {
-  type: 'scene'
-  grids: TextGrid[]
-  objects: SceneObject[]
-}
+  interface TextGrid {
+    type: 'grid'
+    start: number
+    end: number
+    text: string
+    scene?: string
+  }
 
-interface Size {
-  width: number
-  height: number
-  ratio: number
-}
+  interface Scene {
+    type: 'scene'
+    grids: TextGrid[]
+    objects: SceneObject[]
+  }
 
-type AssetType = 1 | 2 | 3
+  interface Size {
+    width: number
+    height: number
+    ratio: number
+  }
 
-interface BaseObject {
-  x: number
-  y: number
-  width: number
-  height: number
-  interval: [number, number]
-  type: AssetType
-  src: string
-  id: number
-}
+  type AssetType = 1 | 2 | 3
 
-type SceneObject = BaseObject
+  interface BaseObject {
+    x: number
+    y: number
+    width: number
+    height: number
+    interval: [number, number]
+    type: AssetType
+    src: string
+    id: number
+    target: Raw<ViewContainer>
+  }
 
-interface Vector {
-  x: number
-  y: number
+  type SceneObject = BaseObject
+
+  interface Vector {
+    x: number
+    y: number
+  }
 }

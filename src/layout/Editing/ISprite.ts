@@ -2,7 +2,7 @@ import { Sprite, Texture, type SpriteOptions } from 'pixi.js'
 import Control from './Control'
 import { eventEmitter } from '@/pixi'
 import useRulerStore from '@/store/ruler'
-import { useEditingStore } from '@/store'
+import useEditingStore from '@/store/editing'
 
 class ISprite extends Sprite {
   #control: Control | null = null

@@ -1,3 +1,4 @@
+import { IntervalTree } from '@/layout/Editing/IntervalTree'
 import { defineStore } from 'pinia'
 
 interface State {
@@ -29,7 +30,6 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
     currentGridIndex: undefined,
     totalFrame: 0,
     currentFrame: 0,
-    now: 0,
   }),
   actions: {
     addObject(object: SceneObject) {
@@ -66,5 +66,7 @@ const useEditingStore = defineStore<'editing', State, {}, Actions>('editing', {
     },
   },
 })
+
+export const intervalTree = new IntervalTree()
 
 export default useEditingStore

@@ -34,6 +34,7 @@
     "vue-click-to-component": "^0.3.8",
     "vue-request": "^2.0.4",
     "vue-sonner": "^1.3.0",
+    "webm-muxer": "^5.1.4",
     "zod": "^3.25.9"
   },
   "devDependencies": {

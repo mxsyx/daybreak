@@ -3,13 +3,14 @@ import { Pause, Play, Redo2, Undo2 } from 'lucide-vue-next'
 import { ToggleRuler } from './Ruler'
 import Timeline from './Timeline.vue'
 import pixi, { eventEmitter, pixiOuter } from '@/pixi'
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, markRaw } from 'vue'
 import { Assets, Texture } from 'pixi.js'
 import ISprite from './ISprite'
 import SceneLine from '../SceneEditor/SceneLine'
-import { useEditingStore, useSizeStore } from '@/store'
+import useEditingStore, { intervalTree } from '@/store/editing'
 import type { TransferData } from '../AssetsExplorer/utils'
 import { AssetTypeEnum } from '@/endpoints/asset'
+import useSizeStore from '@/store/size'
 
 const containerRef = ref<HTMLDivElement>()
 const canvasInited = ref<boolean>(false)
@@ -100,15 +101,25 @@ const handleDrop = async (e: DragEvent) => {
   sprite.y = sprite.y - sprite.height * data.pointerPercentY
 
   if (editingStore.scene) {
+    const interval: [number, number] = [
+      editingStore.currentFrame,
+      editingStore.totalFrame,
+    ]
+
     editingStore.addObject({
       x: sprite.x,
       y: sprite.y,
       width: sprite.width,
       height: sprite.height,
-      interval: [editingStore.currentFrame, editingStore.totalFrame],
+      interval,
       type: AssetTypeEnum.IMAGE,
       src: data.src,
       id: sprite.uid,
+      target: markRaw(sprite),
+    })
+    intervalTree.insert(interval[0], interval[1], {
+      type: 'object',
+      id: sprite.uid.toString(),
     })
   }
 

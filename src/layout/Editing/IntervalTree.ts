@@ -56,7 +56,7 @@ class Interval implements IInterval {
    * Convert to string representation
    */
   toString(): string {
-    return `[${this.start}, ${this.end}] (${this.data})`
+    return `[${this.start}, ${this.end}] (${this.data.type}:${this.data.id})`
   }
 
   /**
@@ -117,6 +117,15 @@ interface BatchResult<T> {
   averageTime: number
   successCount: number
   errorCount: number
+}
+
+/**
+ * Delete operation result type
+ */
+interface DeleteResult {
+  success: boolean
+  deletedInterval: Interval | null
+  message: string
 }
 
 /**
@@ -194,6 +203,16 @@ export class IntervalTree {
   }
 
   /**
+   * Find minimum value node in subtree
+   */
+  private findMinNode(root: AVLNode): AVLNode {
+    while (root.left) {
+      root = root.left
+    }
+    return root
+  }
+
+  /**
    * Recursively insert node
    */
   private insertRecursive(root: AVLNode | null, interval: Interval): AVLNode {
@@ -239,6 +258,97 @@ export class IntervalTree {
     }
 
     return root
+  }
+
+  /**
+   * Recursively delete node by id
+   */
+  private deleteRecursive(
+    root: AVLNode | null,
+    id: string,
+  ): { node: AVLNode | null; deleted: Interval | null } {
+    if (!root) {
+      return { node: null, deleted: null }
+    }
+
+    let deletedInterval: Interval | null = null
+
+    // Search for the node to delete
+    if (root.interval.data.id === id) {
+      deletedInterval = root.interval
+      this._size--
+
+      // Case 1: Node has no children or only one child
+      if (!root.left || !root.right) {
+        const temp = root.left || root.right
+        return { node: temp, deleted: deletedInterval }
+      }
+
+      // Case 2: Node has two children
+      // Find the inorder successor (smallest in the right subtree)
+      const successor = this.findMinNode(root.right)
+
+      // Replace current node's interval with successor's interval
+      root.interval = successor.interval
+
+      // Delete the successor
+      const deleteResult = this.deleteRecursive(
+        root.right,
+        successor.interval.data.id,
+      )
+      root.right = deleteResult.node
+      // Don't decrement size again as it was already decremented above
+      if (deleteResult.deleted) {
+        this._size++
+      }
+    } else {
+      // Continue searching in left or right subtree
+      const leftResult = this.deleteRecursive(root.left, id)
+      if (leftResult.deleted) {
+        root.left = leftResult.node
+        deletedInterval = leftResult.deleted
+      } else {
+        const rightResult = this.deleteRecursive(root.right, id)
+        root.right = rightResult.node
+        deletedInterval = rightResult.deleted
+      }
+    }
+
+    // If no deletion occurred, return original node
+    if (!deletedInterval) {
+      return { node: root, deleted: null }
+    }
+
+    // Update height and maxEnd
+    this.updateHeight(root)
+    this.updateMaxEnd(root)
+
+    // Get balance factor and perform rotations if needed
+    const balance = this.getBalance(root)
+
+    // Left Left case
+    if (balance > 1 && this.getBalance(root.left) >= 0) {
+      return { node: this.rotateRight(root), deleted: deletedInterval }
+    }
+
+    // Left Right case
+    if (balance > 1 && this.getBalance(root.left) < 0) {
+      root.left = this.rotateLeft(root.left!)
+      return { node: this.rotateRight(root), deleted: deletedInterval }
+    }
+
+    // Right Right case
+    if (balance < -1 && this.getBalance(root.right) <= 0) {
+      return { node: this.rotateLeft(root), deleted: deletedInterval }
+    }
+
+    // Right Left case
+    if (balance < -1 && this.getBalance(root.right) > 0) {
+      root.right = this.rotateRight(root.right!)
+      return { node: this.rotateLeft(root), deleted: deletedInterval }
+    }
+
+    return { node: root, deleted: deletedInterval }
   }
 
   /**
@@ -307,11 +417,118 @@ export class IntervalTree {
   }
 
   /**
+   * Search for interval by id
+   */
+  private searchById(root: AVLNode | null, id: string): Interval | null {
+    if (!root) return null
+
+    if (root.interval.data.id === id) {
+      return root.interval
+    }
+
+    const leftResult = this.searchById(root.left, id)
+    if (leftResult) return leftResult
+
+    return this.searchById(root.right, id)
+  }
+
+  /**
    * Insert interval
    */
   insert(start: number, end: number, data: IntervalData): void {
     const interval = new Interval(start, end, data)
     this.root = this.insertRecursive(this.root, interval)
+  }
+
+  /**
+   * Delete interval by id
+   */
+  deleteById(id: string): DeleteResult {
+    const startTime = performance.now()
+
+    // First check if the interval exists
+    const existingInterval = this.searchById(this.root, id)
+    if (!existingInterval) {
+      return {
+        success: false,
+        deletedInterval: null,
+        message: `Interval with id '${id}' not found`,
+      }
+    }
+
+    // Perform deletion
+    const result = this.deleteRecursive(this.root, id)
+    this.root = result.node
+
+    const endTime = performance.now()
+
+    return {
+      success: true,
+      deletedInterval: result.deleted,
+      message: `Successfully deleted interval with id '${id}' in ${(endTime - startTime).toFixed(2)}ms`,
+    }
+  }
+
+  /**
+   * Delete multiple intervals by ids
+   */
+  deleteBatch(ids: string[]): BatchResult<DeleteResult> {
+    const startTime = performance.now()
+    const results: DeleteResult[] = []
+    let successCount = 0
+    let errorCount = 0
+
+    for (const id of ids) {
+      try {
+        const result = this.deleteById(id)
+        results.push(result)
+        if (result.success) {
+          successCount++
+        } else {
+          errorCount++
+        }
+      } catch (error) {
+        results.push({
+          success: false,
+          deletedInterval: null,
+          message: `Error deleting interval with id '${id}': ${error}`,
+        })
+        errorCount++
+      }
+    }
+
+    const endTime = performance.now()
+    const totalTime = endTime - startTime
+
+    return {
+      results,
+      totalTime,
+      averageTime: totalTime / ids.length,
+      successCount,
+      errorCount,
+    }
+  }
+
+  /**
+   * Find interval by id
+   */
+  findById(id: string): Interval | null {
+    return this.searchById(this.root, id)
+  }
+
+  /**
+   * Check if interval with given id exists
+   */
+  hasId(id: string): boolean {
+    return this.findById(id) !== null
+  }
+
+  /**
+   * Get all unique IDs in the tree
+   */
+  getAllIds(): string[] {
+    const intervals = this.getAllIntervals()
+    return intervals.map((interval) => interval.data.id)
   }
 
   /**

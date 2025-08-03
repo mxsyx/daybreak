@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useEditingStore } from '@/store'
-import { IntervalTree } from './IntervalTree'
 import { FRAME_DURATION } from '@/lib/constants'
+import useEditingStore, { intervalTree } from '@/store/editing'
+import pixi from '@/pixi'
 
 const SLIDER_TRACKER_SIZE = 12
-
-const intervalTree = new IntervalTree()
 
 const containerRef = ref<HTMLDivElement>()
 const sliderRef = ref<HTMLDivElement>()
@@ -120,6 +118,9 @@ const handlePointerMove = (e: PointerEvent) => {
     containerRef.value!.scrollWidth - SLIDER_TRACKER_SIZE,
   )
   sliderRef.value!.style.left = `${left}px`
+
+  const frame = getFrameByMouseEvent(e)
+  editingStore.currentFrame = frame
 }
 
 const handlePointerUp = () => {
@@ -168,6 +169,12 @@ const setObjectIntervalStart = (e: MouseEvent) => {
       )
     }
 
+    intervalTree.deleteById(object.target.uid.toString())
+    intervalTree.insert(frame, object.interval[1], {
+      type: 'object',
+      id: object.target.uid.toString(),
+    })
+
     object.interval[0] = frame
   }
 
@@ -195,6 +202,13 @@ const setObjectIntervalEnd = (e: MouseEvent) => {
       )
     }
 
+    const id = object.target.uid.toString()
+    intervalTree.deleteById(id)
+    intervalTree.insert(object.interval[0], frame, {
+      type: 'object',
+      id,
+    })
+
     object.interval[1] = frame
   }
 
@@ -211,14 +225,16 @@ const play = () => {
 
   editingStore.currentGridIndex = currentGridIndex
 
-  sliderRef.value!.style.left = `${left}px`
+  if (left > 0) {
+    sliderRef.value!.style.left = `${left}px`
 
-  const percentleft = (left % containerWidth) / containerWidth
-  if (percentleft.toPrecision(2) === '0.80') {
-    containerRef.value!.scrollTo({
-      left: containerRef.value!.scrollLeft + containerWidth * 0.8,
-      behavior: 'smooth',
-    })
+    const percentleft = (left % containerWidth) / containerWidth
+    if (percentleft.toPrecision(2) === '0.80') {
+      containerRef.value!.scrollTo({
+        left: containerRef.value!.scrollLeft + containerWidth * 0.8,
+        behavior: 'smooth',
+      })
+    }
   }
 
   if (currentFrame < editingStore.totalFrame) {
@@ -251,6 +267,30 @@ const resetFrameParams = () => {
   }
 }
 
+const flushStage = () => {
+  const intervals = intervalTree
+    .findOverlapping(editingStore.currentFrame)
+    .filter((interval) => interval.data.type === 'object')
+
+  const map: Dict = {}
+
+  pixi.stage.children.forEach((child) => {
+    map[child.uid] = child
+  })
+
+  intervals.forEach((interval) => {
+    const object = map[interval.data.id]
+    if (object) {
+      object.visible = true
+      delete map[interval.data.id]
+    }
+  })
+
+  Object.values(map).forEach((object) => {
+    object.visible = false
+  })
+}
+
 watch(
   () => editingStore.isPlaying,
   () => {
@@ -260,6 +300,8 @@ watch(
     }
   },
 )
+
+watch(() => editingStore.currentFrame, flushStage)
 
 watch(grids, () => {
   intervalTree.clear()

@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import clsx from 'clsx'
 import data from '@/test/data.json'
-import { useEditingStore } from '@/store'
+import useEditingStore from '@/store/editing'
 
 const editingStore = useEditingStore()
 
