@@ -8,7 +8,11 @@ export type EventTypes = 'delete' | 'deselect'
 export const eventEmitter = new EventEmitter<EventTypes>()
 
 export async function initPixi(width = 1920, height = 1080) {
-  await pixi.init({ width, height, antialias: true })
+  await pixi.init({
+    width,
+    height,
+    antialias: true,
+  })
 
   await pixiOuter.init({
     width: width * 1.1,

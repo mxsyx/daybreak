@@ -4,4 +4,4 @@ export const PRIMARY_COLOR = 0x892eff
 
 export const ONE_MB = 1024 * 1024
 
-export const FRAME_DURATION = 1000 / 60
+export const FRAME_DURATION = 1000 / 30

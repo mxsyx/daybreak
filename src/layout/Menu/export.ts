@@ -1,41 +1,45 @@
 import pixi from '@/pixi'
 import useEditingStore, { intervalTree } from '@/store/editing'
+import { Rectangle } from 'pixi.js'
 import { Muxer as WebMMuxer, ArrayBufferTarget } from 'webm-muxer'
 
-const flushStage = (frame: number) => {
-  const intervals = intervalTree
-    .findOverlapping(frame)
-    .filter((interval) => interval.data.type === 'object')
+// const flushStage = (frame: number) => {
+//   const intervals = intervalTree
+//     .findOverlapping(frame)
+//     .filter((interval) => interval.data.type === 'object')
 
-  const map: Dict = {}
+//   const map: Dict = {}
 
-  pixi.stage.children.forEach((child) => {
-    map[child.uid] = child
-  })
+//   pixi.stage.children.forEach((child) => {
+//     map[child.uid] = child
+//   })
 
-  intervals.forEach((interval) => {
-    const object = map[interval.data.id]
-    if (object) {
-      object.visible = true
-      delete map[interval.data.id]
-    }
-  })
+//   intervals.forEach((interval) => {
+//     const object = map[interval.data.id]
+//     if (object) {
+//       object.visible = true
+//       delete map[interval.data.id]
+//     }
+//   })
 
-  Object.values(map).forEach((object) => {
-    object.visible = false
-  })
-}
+//   Object.values(map).forEach((object) => {
+//     object.visible = false
+//   })
+// }
 
 export async function exportVideo() {
   const editingStore = useEditingStore()
 
   // 创建 canvas（可换为 Pixi.js 的 app.view）
-  const canvas = pixi.canvas
+  const canvas = pixi.renderer.extract.canvas({
+    target: pixi.stage,
+    frame: new Rectangle(0, 0, pixi.screen.width, pixi.screen.height),
+  })
 
   // 视频参数
   const width = canvas.width
   const height = canvas.height
-  const fps = 60
+  const fps = 30
 
   // 创建 ArrayBufferTarget 实例
   const target = new ArrayBufferTarget()
@@ -60,7 +64,6 @@ export async function exportVideo() {
         output: (chunk) => {
           muxer.addVideoChunk(chunk)
           frameCount++
-
           console.log(frameCount)
 
           // 当所有帧都编码完成时
@@ -82,11 +85,11 @@ export async function exportVideo() {
 
       // 检查编码器支持
       VideoEncoder.isConfigSupported({
-        codec: 'vp8',
-        width,
-        height,
+        codec: 'vp9',
+        width: 640,
+        height: 360,
         bitrate: 2_000_000,
-        framerate: fps,
+        framerate: 30,
       })
         .then((support) => {
           if (!support.supported) {
@@ -95,21 +98,22 @@ export async function exportVideo() {
           }
 
           encoder.configure({
-            codec: 'vp8',
+            codec: 'vp9',
             width,
             height,
-            bitrate: 2_000_000,
+            bitrate: 6_000_000,
             framerate: fps,
           })
 
           // 逐帧绘制 + 编码
           for (let i = 0; i < editingStore.totalFrame; i++) {
-            flushStage(i)
+            // flushStage(i)
             const timestamp = (i * 1_000_000) / fps // 微秒
             const frame = new VideoFrame(canvas, {
               timestamp,
               duration: 1_000_000 / fps, // 添加帧持续时间
             })
+
             encoder.encode(frame, { keyFrame: i === 0 })
             frame.close() // 释放资源
           }
@@ -119,8 +123,11 @@ export async function exportVideo() {
   }
 
   try {
+    const now = Date.now()
     // 等待编码完成
     await createEncoder()
+
+    console.log('Encoding completed in', Date.now() - now, 'ms')
 
     // 封装视频
     muxer.finalize()
